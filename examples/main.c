@@ -7,11 +7,12 @@
 // UPDATED: 01/09/2021
 
 #include <stdio.h>
-#include "../compiled/kas.h"
+#define KAS_USE_BLOCK_MANAGEMENT
+#include "../header_only/kas.h"
 
 int main()
 {
-	char* ptr = kas_malloc(13) // 13 bytes allocation
+	char* ptr = kas_malloc(13); // 13 bytes allocation
 	ptr = "hello world !";
 	printf("%s\n", ptr);
 	kas_free(ptr);
