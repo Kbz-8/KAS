@@ -12,6 +12,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#define malloc(x) kas_malloc(x)
+
 typedef struct block block;
 
 struct block
