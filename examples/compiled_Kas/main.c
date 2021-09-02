@@ -3,11 +3,11 @@
 // free, realloc, calloc...
 // 
 // AUTHOR: kbz_8
-// CREATED: 01/09/2021
+// CREATED: 02/09/2021
 // UPDATED: 02/09/2021
 
 #include <stdio.h>
-#include "../header_only/kas.h"
+#include "../../compiled/kas.h"
 
 int main()
 {

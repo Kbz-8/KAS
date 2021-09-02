@@ -14,6 +14,9 @@
 #include <unistd.h>
 
 #define malloc(x) kas_malloc(x) // replacing all malloc by kas_malloc due to conflict between malloc and sbrk
+#define realloc(x) kas_realloc(x)
+#define calloc(x, y) kas_calloc(x, y)
+#define free(x), kas_free(x)
 
 typedef struct block block;
 
@@ -128,6 +131,18 @@ void* kas_realloc(void* ptr, size_t size)
 			return newPtr;
 		}
 	}
+}
+
+void* kas_calloc(size_t n, size_t size)
+{
+	void* ptr = kas_malloc(n * size);
+	if(!ptr)
+	{
+		printf("\033]1;31m KAS error: unable to calloc %ld size \033]1;39m \n", size);
+		return NULL;
+	}
+	memset(ptr, 0, n * size);
+	return ptr;
 }
 
 #endif // __KAS__
