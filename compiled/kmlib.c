@@ -8,6 +8,8 @@
 
 static block* head = NULL;
 static block* tail = NULL;
+static unsigned long long gc_leaks_bytes = 0;
+static bool is_gc_init = false;
 
 void add_block(block* newBlock)
 {
@@ -46,15 +48,14 @@ void remove_block(block* delBlock)
 void* kml_malloc(size_t size)
 {
 	void* ptr = NULL;
-	size_t _size = size >= 3 * sysconf(_SC_PAGESIZE) ? size + sizeof(block) : 3 * sysconf(_SC_PAGESIZE);
-
 	block* block_ptr = head;
 
 #pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-		block_ptr = sbrk(_size); // calling system allocation function
+		block_ptr = sbrk(size); // calling system allocation function
 #pragma GCC diagnostic pop
 
+	block_ptr->size = size;
 	add_block(block_ptr);
 	if(!block_ptr)
 	{
@@ -62,6 +63,13 @@ void* kml_malloc(size_t size)
 		return NULL;
 	}
 	ptr = (void*)((unsigned long)block_ptr + sizeof(block));
+
+	printf("%d\n", is_gc_init);
+	
+	if(is_gc_init)
+		gc_leaks_bytes += size;
+	printf("%lld\n", gc_leaks_bytes);
+
 	return ptr;
 }
 
@@ -74,6 +82,8 @@ int kml_free(void* ptr)
 		if(ptr == (void*)((unsigned long)finder + block_size)) // searching for pointer in blocks chain
 		{
 			block_size += finder->size;
+			if(is_gc_init)
+				gc_leaks_bytes -= finder->size;
 			remove_block(finder);
 			ptr = NULL;
 			sbrk(-block_size);
@@ -164,13 +174,34 @@ void* kml_memcpy(void* dest, void* src, size_t size)
 	return dest;
 }
 
+/* ============== Garbage collector ============== */
+
+
 void kml_init_gc()
 {
-
+	gc_leaks_bytes = 0;
+	is_gc_init = true;
 }
 
 void kml_end_gc()
 {
-
+	if(gc_leaks_bytes != 0)
+	{
+		#ifndef KML_GC_DONT_FREE_LEAKS
+			printf("kmlib warning: leak of %lld has been detected ! freeing the memory leak [#define KML_GC_DONT_FREE_LEAKS to avoid that]\n", gc_leaks_bytes);
+			block* free = tail;
+			void* ptr = NULL;
+			while(tail != head)
+			{
+				ptr = (void*)((unsigned long)free + sizeof(block));
+				printf("freeing %p \n", ptr);
+				kml_free(ptr);
+				free = tail;
+			}
+		#else
+			printf("kmlib warning: leak of %ld has been detected !\n", gc_leaks_bytes);
+		#endif
+	}
+	is_gc_init = false;
 }
 
