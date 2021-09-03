@@ -1,22 +1,19 @@
-// KAS (Kbz_8 Allocation System) project is a mini project for fun.
-// It's my own implementation of functions malloc,
-// free, realloc, calloc...
+// KMlib (Kbz_8 Memory library) project is a mini project for fun.
 // 
 // AUTHOR: kbz_8
 // CREATED: 01/09/2021
-// UPDATED: 02/09/2021
+// UPDATED: 03/09/2021
 
-#ifndef __KAS__
-#define __KAS__
+#ifndef __KMlib__
+#define __KMlib__
 
 #include <stdio.h>
-#include <string.h>
 #include <unistd.h>
 
-#define malloc(x) kas_malloc(x) // replacing all malloc by kas_malloc due to conflict between malloc and sbrk
-#define realloc(x) kas_realloc(x)
-#define calloc(x, y) kas_calloc(x, y)
-#define free(x), kas_free(x)
+#define malloc(x) kml_malloc(x) // replacing all malloc by kml_malloc due to conflict between malloc and sbrk
+#define realloc(x) kml_realloc(x)
+#define calloc(x, y) kml_calloc(x, y)
+#define free(x), kml_free(x)
 
 typedef struct block block;
 
@@ -29,6 +26,41 @@ struct block
 
 static block* head = NULL;
 static block* tail = NULL;
+
+void* kml_memset(void* ptr, int c, size_t size)
+{
+	#ifdef KAS_MEMSET_AUTO_MALLOC
+		if(!ptr)
+			ptr = kml_malloc(size);
+	#endif
+
+	unsigned char* source = (unsigned char*)ptr;
+	while(size--)
+	{
+		*source++ = (unsigned char*)c;
+	}
+	return ptr;
+}
+
+void* kml_memcpy(void* dest, void* src, size_t size)
+{	
+	#ifdef KAS_MEMCPY_AUTO_MALLOC
+		if(!dest)
+			dest = kml_malloc(size);
+	#endif
+
+	unsigned char* p_dest = (unsigned char*)dest;
+	const unsigned char* p_src = (unsigned char*)src;
+
+	if(dest != NULL && src != NULL)
+	{
+		while(size--)
+		{
+			*p_dest++ = *p_src++;
+		}
+	}
+	return dest;
+}
 
 void add_block(block* newBlock)
 {
@@ -64,14 +96,18 @@ void remove_block(block* delBlock)
 	delBlock = NULL;
 }
 
-void* kas_malloc(size_t size)
+void* kml_malloc(size_t size)
 {
 	void* ptr = NULL;
 	size_t _size = size >= 3 * sysconf(_SC_PAGESIZE) ? size + sizeof(block) : 3 * sysconf(_SC_PAGESIZE);
 
 	block* block_ptr = head;
 
-	block_ptr = sbrk(_size); // calling system allocation function
+#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+		block_ptr = sbrk(_size); // calling system allocation function sbrk
+#pragma GCC diagnostic pop
+
 	add_block(block_ptr);
 	if(!block_ptr)
 	{
@@ -82,7 +118,7 @@ void* kas_malloc(size_t size)
 	return ptr;
 }
 
-int kas_free(void* ptr)
+int kml_free(void* ptr)
 {
 	block* finder = head;
 	size_t block_size = sizeof(block); // avoiding redoing sizeof(block) operation at each turn of the loop
@@ -102,10 +138,10 @@ int kas_free(void* ptr)
 	return 0; // pointer was not correctly freed
 }
 
-void* kas_realloc(void* ptr, size_t size)
+void* kml_realloc(void* ptr, size_t size)
 {
 	if(!ptr)
-		return kas_malloc(size);
+		return kml_malloc(size);
 	block* finder = head;
 	void* newPtr = NULL;
 	size_t block_size = sizeof(block);
@@ -116,12 +152,12 @@ void* kas_realloc(void* ptr, size_t size)
 			if(size == finder->size)
 				return ptr;
 
-			newPtr = kas_malloc(size);
+			newPtr = kml_malloc(size);
 
 			if(size > finder->size)
-				memcpy(newPtr, ptr, finder->size);
+				kml_memcpy(newPtr, ptr, finder->size);
 			else if(size < finder->size)
-				memcpy(newPtr, ptr, size);
+				kml_memcpy(newPtr, ptr, size);
 
 			if(!newPtr)
 			{
@@ -133,17 +169,17 @@ void* kas_realloc(void* ptr, size_t size)
 	}
 }
 
-void* kas_calloc(size_t n, size_t size)
+void* kml_calloc(size_t n, size_t size)
 {
-	void* ptr = kas_malloc(n * size);
+	void* ptr = kml_malloc(n * size);
 	if(!ptr)
 	{
 		printf("\033]1;31m KAS error: unable to calloc %ld size \033]1;39m \n", size);
 		return NULL;
 	}
-	memset(ptr, 0, n * size);
+	kml_memset(ptr, 0, n * size);
 	return ptr;
 }
 
-#endif // __KAS__
+#endif // __KMlib__
 

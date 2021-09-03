@@ -1,7 +1,7 @@
 C = gcc
 CFLAGS = -Wall -g
 
-OBJ = main.o kas.o
+OBJ = main.o kmlib.o
 EXE = main
 
 all: $(EXE)
@@ -9,12 +9,13 @@ all: $(EXE)
 $(EXE):	$(OBJ)
 	$(C) -o $(EXE) $(OBJ)
 
-main.o: main.c ../../compiled/kas.h
+main.o: main.c ../../compiled/kmlib.h
 	$(C) -o $@ -c $< $(CFLAGS)
  
-kas.o: ../../compiled/kas.c
+kmlib.o: ../../compiled/kmlib.c
 	$(C) -o $@ -c $< $(CFLAGS)
 
 clean:
 	rm $(EXE)
+	rm $(OBJ)
 
