@@ -1,4 +1,4 @@
-// KMlib (Kbz_8 Memory library) project is a mini project for fun.
+// kmlib (kbz_8 memory library) project is a mini project for fun.
 // 
 // AUTHOR: kbz_8
 // CREATED: 02/09/2021

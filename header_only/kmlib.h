@@ -1,4 +1,4 @@
-// KMlib (Kbz_8 Memory library) project is a mini project for fun.
+// kmlib (kbz_8 memory library) project is a mini project for fun.
 // 
 // AUTHOR: kbz_8
 // CREATED: 01/09/2021
@@ -111,7 +111,7 @@ void* kml_malloc(size_t size)
 	add_block(block_ptr);
 	if(!block_ptr)
 	{
-		printf("\033]1;31m KAS error: unable to alloc %ld size \033]1;39m \n", size);
+		printf("\033]1;31m kmlib error: unable to alloc %ld size \033]1;39m \n", size);
 		return NULL;
 	}
 	ptr = (void*)((unsigned long)block_ptr + sizeof(block));
@@ -161,7 +161,7 @@ void* kml_realloc(void* ptr, size_t size)
 
 			if(!newPtr)
 			{
-				printf("\033]1;31m KAS error: unable to realloc %ld size \033]1;39m \n", size);
+				printf("\033]1;31m kmlib error: unable to realloc %ld size \033]1;39m \n", size);
 				return NULL;
 			}
 			return newPtr;
@@ -174,7 +174,7 @@ void* kml_calloc(size_t n, size_t size)
 	void* ptr = kml_malloc(n * size);
 	if(!ptr)
 	{
-		printf("\033]1;31m KAS error: unable to calloc %ld size \033]1;39m \n", size);
+		printf("\033]1;31m kmlib error: unable to calloc %ld size \033]1;39m \n", size);
 		return NULL;
 	}
 	kml_memset(ptr, 0, n * size);
