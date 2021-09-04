@@ -2,7 +2,7 @@
 // 
 // AUTHOR: kbz_8
 // CREATED: 01/09/2021
-// UPDATED: 03/09/2021
+// UPDATED: 04/09/2021
 
 #include "kmlib.h"
 
@@ -31,8 +31,13 @@ void remove_block(block* delBlock)
 {
 	if(delBlock == head)
 	{
-		head = NULL;
-		tail = head;
+		if(head->next != NULL)
+			head = head->next;
+		else
+		{
+			head = NULL;
+			tail = head;
+		}
 	}
 	else if(delBlock == tail)
 		tail = delBlock->prev;
@@ -59,16 +64,15 @@ void* kml_malloc(size_t size)
 	add_block(block_ptr);
 	if(!block_ptr)
 	{
-		printf("\033]1;31m kmlib error: unable to alloc %d size \033]1;39m \n", size);
+		printf("\033[0;31m");
+		printf("kmlib error: unable to alloc %d size\n", size);
+		printf("\033[0m");
 		return NULL;
 	}
 	ptr = (void*)((unsigned long)block_ptr + sizeof(block));
 
-	printf("%d\n", is_gc_init);
-	
 	if(is_gc_init)
 		gc_leaks_bytes += size;
-	printf("%lld\n", gc_leaks_bytes);
 
 	return ptr;
 }
@@ -77,7 +81,7 @@ int kml_free(void* ptr)
 {
 	block* finder = head;
 	size_t block_size = sizeof(block); // avoiding redoing sizeof(block) operation at each turn of the loop
-	while(finder != tail)
+	do
 	{
 		if(ptr == (void*)((unsigned long)finder + block_size)) // searching for pointer in blocks chain
 		{
@@ -91,7 +95,7 @@ int kml_free(void* ptr)
 		}
 
 		finder = finder->next;
-	}
+	} while(finder != tail);
 	return 0; // if pointer was not correctly freed
 }
 
@@ -102,7 +106,7 @@ void* kml_realloc(void* ptr, size_t size)
 	block* finder = head;
 	void* newPtr = NULL;
 	size_t block_size = sizeof(block);
-	while(finder != tail)
+	do
 	{
 		if(ptr == (void*)((unsigned long)finder + block_size))
 		{
@@ -118,12 +122,14 @@ void* kml_realloc(void* ptr, size_t size)
 
 			if(!newPtr)
 			{
-				printf("\033]1;31m kmlib error: unable to realloc %d size \033]1;39m \n", size);
+				printf("\033[0;31m");
+				printf("kmlib error: unable to realloc %d size\n", size);
+				printf("\033[0m");
 				return NULL;
 			}
 			return newPtr;
 		}
-	}
+	} while(finder != tail);
 	return NULL;
 }
 
@@ -132,7 +138,9 @@ void* kml_calloc(size_t n, size_t size)
 	void* ptr = kml_malloc(n * size);
 	if(!ptr)
 	{
-		printf("\033]1;31m kmlib error: unable to calloc %d size \033]1;39m \n", size);
+		printf("\033[0;31m");
+		printf("kmlib error: unable to calloc %d size\n", size);
+		printf("\033[0m");
 		return NULL;
 	}
 	kml_memset(ptr, 0, n * size);
@@ -176,32 +184,39 @@ void* kml_memcpy(void* dest, void* src, size_t size)
 
 /* ============== Garbage collector ============== */
 
+void kml_end_gc()
+{
+	if(is_gc_init)
+	{
+		if(gc_leaks_bytes != 0)
+		{
+			printf("\033[0;35m");
+			#ifndef KML_GC_DONT_FREE_LEAKS
+				printf("kmlib GC warning: leak of %lld bytes has been detected ! freeing the memory leak [#define KML_GC_DONT_FREE_LEAKS to avoid that]\n", gc_leaks_bytes);
+				block* free = head;
+				void* ptr = NULL;
+				do
+				{
+					ptr = (void*)((unsigned long)free + sizeof(block));
+					if(!kml_free(ptr))
+						printf("\033[0;31mkmlib GC error: unable to free leak\n");
+					free = head;
+				} while(head != tail);
+			#else
+				printf("kmlib GC warning: leak of %lld bytes has been detected ! \n", gc_leaks_bytes);
+			#endif
+		}
+		else
+			printf("\33[0;32mkmlib GC: no leaks have been detected \n");
+		printf("\033[0m");
+		is_gc_init = false;
+	}
+}
 
 void kml_init_gc()
 {
 	gc_leaks_bytes = 0;
 	is_gc_init = true;
-}
-
-void kml_end_gc()
-{
-	if(gc_leaks_bytes != 0)
-	{
-		#ifndef KML_GC_DONT_FREE_LEAKS
-			printf("kmlib warning: leak of %lld has been detected ! freeing the memory leak [#define KML_GC_DONT_FREE_LEAKS to avoid that]\n", gc_leaks_bytes);
-			block* free = tail;
-			void* ptr = NULL;
-			while(tail != head)
-			{
-				ptr = (void*)((unsigned long)free + sizeof(block));
-				printf("freeing %p \n", ptr);
-				kml_free(ptr);
-				free = tail;
-			}
-		#else
-			printf("kmlib warning: leak of %ld has been detected !\n", gc_leaks_bytes);
-		#endif
-	}
-	is_gc_init = false;
+	atexit(kml_end_gc);
 }
 
