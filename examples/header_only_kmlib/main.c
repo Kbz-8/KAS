@@ -2,16 +2,20 @@
 // 
 // AUTHOR: kbz_8
 // CREATED: 01/09/2021
-// UPDATED: 03/09/2021
+// UPDATED: 04/09/2021
 
 #include <stdio.h>
 #include "../../header_only/kmlib.h"
 
-int main()
+int main(int argc, char** argv)
 {
+	kml_init_gc();
+
 	char* ptr = (char*)kml_malloc(13);
 	printf("%p\n", ptr);
 	kml_free(ptr);
+
+	kml_end_gc();
 
 	return 0;
 }

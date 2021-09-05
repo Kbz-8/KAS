@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include "../../compiled/kmlib.h"
 
-int main()
+int main(int argc, char** argv)
 {
 	kml_init_gc();
 

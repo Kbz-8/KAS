@@ -2,7 +2,7 @@
 // 
 // AUTHOR: kbz_8
 // CREATED: 01/09/2021
-// UPDATED: 04/09/2021
+// UPDATED: 05/09/2021
 
 #include "kmlib.h"
 
@@ -10,6 +10,20 @@ static block* head = NULL;
 static block* tail = NULL;
 static unsigned long long gc_leaks_bytes = 0;
 static bool is_gc_init = false;
+static bool is_cleanup_activated = false;
+
+void cleanupBlocks()
+{
+	if(head != NULL || tail != NULL)
+	{
+		block* ptr = head;
+		do
+		{
+			remove_block(ptr);
+			ptr = head;
+		} while(tail != NULL || head != NULL);
+	}
+}
 
 void add_block(block* newBlock)
 {
@@ -57,7 +71,7 @@ void* kml_malloc(size_t size)
 
 #pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-		block_ptr = sbrk(size); // calling system allocation function
+		block_ptr = sbrk(size + sizeof(block)); // calling system allocation function
 #pragma GCC diagnostic pop
 
 	block_ptr->size = size;
@@ -73,6 +87,12 @@ void* kml_malloc(size_t size)
 
 	if(is_gc_init)
 		gc_leaks_bytes += size;
+	
+	if(!is_cleanup_activated)
+	{
+		atexit(cleanup);
+		is_cleanup_activated = true;
+	}
 
 	return ptr;
 }
@@ -88,6 +108,7 @@ int kml_free(void* ptr)
 			block_size += finder->size;
 			if(is_gc_init)
 				gc_leaks_bytes -= finder->size;
+
 			remove_block(finder);
 			ptr = NULL;
 			sbrk(-block_size);

@@ -2,7 +2,7 @@
 // 
 // AUTHOR: kbz_8
 // CREATED: 01/09/2021
-// UPDATED: 03/09/2021
+// UPDATED: 04/09/2021
 
 #ifndef __KMlib__
 #define __KMlib__
@@ -26,8 +26,10 @@ struct block
 	block* prev;
 };
 
-void add_block(block* newBlock);
-void remove_block(block* delBlock);
+
+void use_mem_optimisation();
+void use_proces_optimisation();
+
 void* kml_malloc(size_t size);
 int kml_free(void* ptr);
 void* kml_realloc(void* ptr, size_t size);
