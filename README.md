@@ -39,5 +39,5 @@ This is the list of macros that can be defined to modify the behaviour oh kmlib 
 * KML_GC_DONT_FREE_LEAKS : kml_end_gc says what leaks you have but don't free the memory leak
 
 ### Contact
-bilbo@sacquet.orange.fr
+kbz_8.dev@akel-engine.com
 
