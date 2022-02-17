@@ -2,15 +2,23 @@
 // 
 // AUTHOR: kbz_8
 // CREATED: 01/09/2021
-// UPDATED: 05/09/2021
+// UPDATED: 17/02/2022
 
 #include "kmlib.h"
 
+typedef struct block
+{
+	size_t size;
+	struct block* next;
+	struct block* prev;
+} block;
+
 static block* head = NULL;
 static block* tail = NULL;
-static unsigned long long gc_leaks_bytes = 0;
+static long long gc_leaks_bytes = 0;
 static bool is_gc_init = false;
 static bool is_cleanup_activated = false;
+static size_t __page_size = 0;
 
 void cleanupBlocks()
 {
@@ -69,18 +77,23 @@ void* kml_malloc(size_t size)
 	void* ptr = NULL;
 	block* block_ptr = head;
 
-#pragma GCC diagnostic push
-	#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-		block_ptr = sbrk(size + sizeof(block)); // calling system allocation function
-#pragma GCC diagnostic pop
+	block_ptr = mmap(NULL, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANON | MAP_PRIVATE, 0, 0);
+
+	if(block_ptr == MAP_FAILED)
+	{
+		kml_print("\033[0;31m");
+		printf("kmlib error: unable to alloc map of size : %d\n", size);
+		kml_print("\033[0m");
+		return NULL;
+	}
 
 	block_ptr->size = size;
 	add_block(block_ptr);
 	if(!block_ptr)
 	{
-		printf("\033[0;31m");
+		kml_print("\033[0;31m");
 		printf("kmlib error: unable to alloc %d size\n", size);
-		printf("\033[0m");
+		kml_print("\033[0m");
 		return NULL;
 	}
 	ptr = (void*)((unsigned long)block_ptr + sizeof(block));
@@ -90,7 +103,39 @@ void* kml_malloc(size_t size)
 	
 	if(!is_cleanup_activated)
 	{
-		atexit(cleanup);
+		atexit(cleanupBlocks);
+		is_cleanup_activated = true;
+	}
+
+	return ptr;
+}
+
+void* kml_malloc_shared(size_t size)
+{
+	void* ptr = NULL;
+	block* block_ptr = head;
+
+	block_ptr = mmap(NULL, size + sizeof(block), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANON | MAP_SHARED, 0, 0);
+
+	if(block_ptr == MAP_FAILED)
+	{
+		kml_print("\033[0;31m");
+		printf("kmlib error: unable to alloc map of size : %d\n", size);
+		kml_print("\033[0m");
+		return NULL;
+	}
+
+	block_ptr->size = size;
+	add_block(block_ptr);
+
+	ptr = (void*)((unsigned long)block_ptr + sizeof(block));
+
+	if(is_gc_init)
+		gc_leaks_bytes += size;
+	
+	if(!is_cleanup_activated)
+	{
+		atexit(cleanupBlocks);
 		is_cleanup_activated = true;
 	}
 
@@ -101,17 +146,26 @@ int kml_free(void* ptr)
 {
 	block* finder = head;
 	size_t block_size = sizeof(block); // avoiding redoing sizeof(block) operation at each turn of the loop
+	size_t alloc_size = 0;
 	do
 	{
 		if(ptr == (void*)((unsigned long)finder + block_size)) // searching for pointer in blocks chain
 		{
 			block_size += finder->size;
-			if(is_gc_init)
-				gc_leaks_bytes -= finder->size;
+			alloc_size = finder->size;
 
 			remove_block(finder);
+			if(munmap(finder, alloc_size) != 0)
+			{
+				kml_print("\033[0;31m");
+				kml_print("kmlib error: unable to unmap pointer\n");
+				kml_print("\033[0m");
+				ptr = NULL;
+				return 0;
+			}
+			if(is_gc_init)
+				gc_leaks_bytes -= alloc_size;
 			ptr = NULL;
-			sbrk(-block_size);
 			return 1; // if pointer was correctly freed
 		}
 
@@ -143,9 +197,9 @@ void* kml_realloc(void* ptr, size_t size)
 
 			if(!newPtr)
 			{
-				printf("\033[0;31m");
+				kml_print("\033[0;31m");
 				printf("kmlib error: unable to realloc %d size\n", size);
-				printf("\033[0m");
+				kml_print("\033[0m");
 				return NULL;
 			}
 			return newPtr;
@@ -159,9 +213,9 @@ void* kml_calloc(size_t n, size_t size)
 	void* ptr = kml_malloc(n * size);
 	if(!ptr)
 	{
-		printf("\033[0;31m");
+		kml_print("\033[0;31m");
 		printf("kmlib error: unable to calloc %d size\n", size);
-		printf("\033[0m");
+		kml_print("\033[0m");
 		return NULL;
 	}
 	kml_memset(ptr, 0, n * size);
@@ -203,8 +257,6 @@ void* kml_memcpy(void* dest, void* src, size_t size)
 	return dest;
 }
 
-/* ============== Garbage collector ============== */
-
 void kml_end_gc()
 {
 	if(is_gc_init)
@@ -220,7 +272,7 @@ void kml_end_gc()
 				{
 					ptr = (void*)((unsigned long)free + sizeof(block));
 					if(!kml_free(ptr))
-						printf("\033[0;31mkmlib GC error: unable to free leak\n");
+						kml_print("\033[0;31mkmlib GC error: unable to free leak\n");
 					free = head;
 				} while(head != tail);
 			#else
@@ -228,8 +280,8 @@ void kml_end_gc()
 			#endif
 		}
 		else
-			printf("\33[0;32mkmlib GC: no leaks have been detected \n");
-		printf("\033[0m");
+			kml_print("\33[0;32mkmlib GC: no leaks have been detected \n");
+		kml_print("\033[0m");
 		is_gc_init = false;
 	}
 }
@@ -239,5 +291,54 @@ void kml_init_gc()
 	gc_leaks_bytes = 0;
 	is_gc_init = true;
 	atexit(kml_end_gc);
+}
+
+size_t kml_strlen(const char* str)
+{
+	char c = *str;
+	size_t size = 0;
+	while(c != '\0')
+	{
+		c = *str++;
+		size++;
+	}
+	return size;
+}
+
+void kml_print(const char* out)
+{
+	int fd = open("/home/bilbo/Documents/Programmation/c/kmlib/out/out", O_APPEND); // TODO : relative path
+	size_t map_size = kml_strlen(out);
+
+	char* out_buffer = mmap(NULL, map_size, PROT_READ | PROT_WRITE, MAP_FILE | MAP_PRIVATE, fd, 0);
+
+	if(out_buffer == MAP_FAILED)
+		return;
+
+	kml_memcpy((void*)out_buffer, (void*)out, map_size);
+	fwrite(out_buffer, 1, map_size, stdout);
+
+	close(fd);
+}
+
+void kml_printf(const char* out, ...)
+{
+	kml_va_list args;
+	kml_va_start(args, out);
+
+	kml_va_end(args);
+
+	int fd = open("/home/bilbo/Documents/Programmation/c/kmlib/out/out", O_APPEND); // TODO : relative path
+	size_t map_size = kml_strlen(out);
+
+	char* out_buffer = mmap(NULL, map_size, PROT_READ | PROT_WRITE, MAP_FILE | MAP_PRIVATE, fd, 0);
+
+	if(out_buffer == MAP_FAILED)
+		return;
+
+	kml_memcpy((void*)out_buffer, (void*)out, map_size);
+	fwrite(out_buffer, 1, map_size, stdout);
+
+	close(fd);
 }
 

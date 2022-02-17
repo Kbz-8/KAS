@@ -15,6 +15,10 @@ int main(int argc, char** argv)
 	printf("%p\n", ptr);
 	kml_free(ptr);
 
+	int x = 1;
+	kml_print("new test\n");
+	kml_printf("new test2\n", x);
+
 	kml_end_gc();
 
 
