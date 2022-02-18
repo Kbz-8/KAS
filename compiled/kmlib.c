@@ -77,7 +77,7 @@ void* kml_malloc(size_t size)
 	void* ptr = NULL;
 	block* block_ptr = head;
 
-	block_ptr = mmap(NULL, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANON | MAP_PRIVATE, 0, 0);
+	block_ptr = mmap(NULL, size + sizeof(block), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANON | MAP_PRIVATE, 0, 0);
 
 	if(block_ptr == MAP_FAILED)
 	{
@@ -305,26 +305,35 @@ size_t kml_strlen(const char* str)
 	return size;
 }
 
+void kml_strcpy(char* dest, const char* src)
+{
+	kml_memcpy(dest, src, kml_strlen(src));
+}
+
 void kml_print(const char* out)
 {
 	int fd = open("/home/bilbo/Documents/Programmation/c/kmlib/out/out", O_APPEND); // TODO : relative path
 	size_t map_size = kml_strlen(out);
 
-	char* out_buffer = mmap(NULL, map_size, PROT_READ | PROT_WRITE, MAP_FILE | MAP_PRIVATE, fd, 0);
+	char* out_buffer = mmap(NULL, map_size + 1, PROT_READ | PROT_WRITE, MAP_FILE | MAP_PRIVATE, fd, 0);
 
 	if(out_buffer == MAP_FAILED)
 		return;
 
 	kml_memcpy((void*)out_buffer, (void*)out, map_size);
-	fwrite(out_buffer, 1, map_size, stdout);
+	out_buffer[map_size] = '\n';
+	fwrite(out_buffer, 1, map_size + 1, stdout);
 
 	close(fd);
 }
 
 void kml_printf(const char* out, ...)
 {
-	kml_va_list args;
+	char* buffer = kml_malloc(kml_strlen(out) + 255);
+	kml_va_list args = NULL;
 	kml_va_start(args, out);
+
+	kml_vsprintf(buffer, out, args);
 
 	kml_va_end(args);
 
@@ -336,9 +345,102 @@ void kml_printf(const char* out, ...)
 	if(out_buffer == MAP_FAILED)
 		return;
 
-	kml_memcpy((void*)out_buffer, (void*)out, map_size);
+	kml_memcpy((void*)out_buffer, (void*)buffer, map_size);
+
 	fwrite(out_buffer, 1, map_size, stdout);
 
 	close(fd);
+	kml_free(buffer);
+}
+
+void kml_strrev(char* arr, int start, int end)
+{
+	// Fast string inversion
+
+	if(start >= end)
+		return;
+	if(*(arr + end) == '\0')
+		end--;
+
+	// Fast variable inversion with XOR operation
+	// 
+	// a = a ^ b
+	// b = a ^ b
+	// a = a ^ b
+	*(arr + start) = *(arr + start) ^ *(arr + end);
+	*(arr + end)   = *(arr + start) ^ *(arr + end);
+	*(arr + start) = *(arr + start) ^ *(arr + end);
+	
+	kml_strrev(arr, start + 1, end - 1);
+}
+
+char* kml_itoa(int num, char* dest, int base)
+{
+	int i = 0;
+	int r = 0;
+	bool negative = false;
+
+	if(num == 0)
+	{
+		dest[i] = '0';
+		dest[i + 1] = '\0';
+		return dest;
+	}
+	if(num < 0 && base == 10)
+	{
+		num *= -1;
+		negative = true;
+	}
+
+	while(num != 0)
+	{
+		r = num % base;
+		dest[i] = (r > 9) ? (r - 10) + 'a' : r + '0';
+		i++;
+		num /= base;
+	}
+
+	if(negative == true)
+	{
+		dest[i] = '-';
+		i++;
+	}
+
+	kml_strrev(dest, 0, i - 1);
+	dest[i] = '\0';
+	return dest;
+}
+
+void kml_vsprintf(char* dest, const char* src, kml_va_list args)
+{
+	char c = 0;
+	char* s_case = NULL;
+	float f_case = 0;
+	int d_case = 0;
+	char* buffer = kml_malloc(sizeof(char) * 512);
+	size_t length = 0;
+
+	while(c = *src++)
+	{
+		if(c == '%')
+		{
+			switch(c = *src++)
+			{
+				case '%' : buffer[length] = '%'; length++; break;
+				case 'c' : buffer[length] = kml_va_arg(args, int); length++; break;
+				case 's' : s_case = kml_va_arg(args, char*); /*TODO : strings management*/; length += kml_strlen(s_case); break;
+				case 'd' : d_case = kml_va_arg(args, int); kml_itoa(d_case, buffer, 10); length += kml_strlen(buffer); break;
+				case 'x' : d_case = kml_va_arg(args, int); kml_itoa(d_case, buffer, 16); length += kml_strlen(buffer); break;
+				case 'f' : f_case = kml_va_arg(args, double);  break; // TODO
+				case 'e' : break; // TODO
+
+				default : break;
+			}
+		}
+		else
+			buffer[length] = c;
+	}
+	kml_strcpy(dest, buffer);
+	kml_free(buffer);
 }
 

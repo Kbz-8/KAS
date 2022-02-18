@@ -15,9 +15,13 @@ int main(int argc, char** argv)
 	printf("%p\n", ptr);
 	kml_free(ptr);
 
+	char str[16] = "this is a string";
+	kml_strrev(str, 0, 16);
+	kml_print(str);
+
 	int x = 1;
 	kml_print("new test\n");
-	kml_printf("new test2\n", x);
+	kml_printf("new test2 %d\n", x);
 
 	kml_end_gc();
 

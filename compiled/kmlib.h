@@ -20,12 +20,9 @@
 typedef enum { false = 0, true = 1 } bool;
 
 typedef char* kml_va_list;
-#define kml_va_start(ap, parmn) (void)((ap) == (char*)(&(parmn) + 1))
+#define kml_va_start(ap, parmn) (void)((ap) = (char*)(&(parmn) + 1))
 #define kml_va_arg(ap, type) (((type*)((ap) = ((ap) + sizeof(type))))[-1])
 #define kml_va_end(ap) (void)((ap) = 0)
-
-void use_mem_optimisation();
-void use_proces_optimisation();
 
 void* kml_malloc(size_t size);
 void* kml_malloc_shared_(size_t size);
@@ -41,7 +38,9 @@ void kml_end_gc();
 void kml_print(const char* out);
 void kml_printf(const char* out, ...);
 size_t kml_strlen(const char* str);
-inline kml_strcpy(char* dest, const char* src) { kml_memcpy(dest, src, strlen(src)); }
+void kml_strcpy(char* dest, const char* src);
+void kml_strrev(char* arr, int start, int end);
+void kml_vsprintf(char* dest, const char* src, kml_va_list args);
 
 #endif // __KMlib__
 
