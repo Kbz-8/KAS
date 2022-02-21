@@ -2,7 +2,7 @@
 // 
 // AUTHOR: kbz_8
 // CREATED: 01/09/2021
-// UPDATED: 17/02/2022
+// UPDATED: 21/02/2022
 
 #include "kmlib.h"
 
@@ -315,6 +315,22 @@ void kml_print(const char* out)
 	int fd = open("/home/bilbo/Documents/Programmation/c/kmlib/out/out", O_APPEND); // TODO : relative path
 	size_t map_size = kml_strlen(out);
 
+	char* out_buffer = mmap(NULL, map_size, PROT_READ | PROT_WRITE, MAP_FILE | MAP_PRIVATE, fd, 0);
+
+	if(out_buffer == MAP_FAILED)
+		return;
+
+	kml_memcpy((void*)out_buffer, (void*)out, map_size);
+	fwrite(out_buffer, 1, map_size, stdout);
+
+	close(fd);
+}
+
+void kml_println(const char* out)
+{
+	int fd = open("/home/bilbo/Documents/Programmation/c/kmlib/out/out", O_APPEND); // TODO : relative path
+	size_t map_size = kml_strlen(out);
+
 	char* out_buffer = mmap(NULL, map_size + 1, PROT_READ | PROT_WRITE, MAP_FILE | MAP_PRIVATE, fd, 0);
 
 	if(out_buffer == MAP_FAILED)
@@ -368,7 +384,7 @@ void kml_strrev(char* arr, int start, int end)
 	// b = a ^ b
 	// a = a ^ b
 	*(arr + start) = *(arr + start) ^ *(arr + end);
-	*(arr + end)   = *(arr + start) ^ *(arr + end);
+	*(arr + end)   = *(arr + start) ^ *(arr + end); // a bit tricky
 	*(arr + start) = *(arr + start) ^ *(arr + end);
 	
 	kml_strrev(arr, start + 1, end - 1);
