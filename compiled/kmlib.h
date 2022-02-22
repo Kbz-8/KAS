@@ -39,8 +39,17 @@ void kml_println(const char* out);
 void kml_printf(const char* out, ...);
 size_t kml_strlen(const char* str);
 void kml_strcpy(char* dest, const char* src);
+void kml_stradd(char* dest, const char* src);
 void kml_strrev(char* arr, int start, int end);
 char* kml_vsprintf(const char* src, kml_va_list args);
+
+char* kml_nitoa(int num, char* dest, int pos, int base);
+char* kml_itoa(int num, char* dest, int base);
+char* kml_nlltoa(long long num, char* dest, int pos, int base);
+char* kml_lltoa(long long num, char* dest, int base);
+#define MAX_PRECISION 10
+char* kml_nftoa(double num, char* dest, int pos, int precision);
+char* kml_ftoa(double num, char* dest, int precision);
 
 #endif // __KMlib__
 

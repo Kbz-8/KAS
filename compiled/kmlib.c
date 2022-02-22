@@ -240,7 +240,7 @@ void* kml_memset(void* ptr, int c, size_t size)
 void* kml_memcpy(void* dest, void* src, size_t size)
 {	
 	#ifdef KML_MEMCPY_AUTO_MALLOC
-		if(!dest)
+		if(dest == NULL)
 			dest = kml_malloc(size);
 	#endif
 
@@ -361,6 +361,7 @@ void kml_printf(const char* out, ...)
 	kml_va_end(args);
 
 	int fd = open("/home/bilbo/Documents/Programmation/c/kmlib/out/out", O_APPEND); // TODO : relative path
+//	int fd = open("/dev/tty", O_APPEND); // TODO : relative path
 	size_t map_size = kml_strlen(buffer);
 
 	char* out_buffer = mmap(NULL, map_size, PROT_READ | PROT_WRITE, MAP_FILE | MAP_PRIVATE, fd, 0);
@@ -368,7 +369,7 @@ void kml_printf(const char* out, ...)
 	if(out_buffer == MAP_FAILED)
 		return;
 
-	kml_memcpy((void*)out_buffer, (void*)buffer, map_size);
+	kml_strcpy(out_buffer, buffer);
 
 	fwrite(out_buffer, 1, map_size, stdout);
 
@@ -479,7 +480,6 @@ char* kml_lltoa(long long num, char* dest, int base)
 	return kml_nlltoa(num, dest, 0, base);
 }
 
-#define MAX_PRECISION 10
 static const double rounders[MAX_PRECISION + 1] = {
 	0.5,
 	0.05,
@@ -588,10 +588,16 @@ char* kml_vsprintf(const char* src, kml_va_list args)
 			switch(c = *src++)
 			{
 				case '%' : buffer[length] = '%'; length++; break;
-				
 				case 'c' : buffer[length] = kml_va_arg(args, char); length++; break;
-				
-				case 's' : char* s_case = kml_va_arg(args, char*); kml_stradd(buffer, s_case); length += kml_strlen(s_case) - 1; s_case = NULL; break;
+
+				case 's' : 
+				{
+					char* s_case = kml_va_arg(args, char*);
+					kml_stradd(buffer, s_case);
+					length += kml_strlen(s_case) - 1;
+					s_case = NULL;
+					break;
+				}
 				
 				case 'l':
 				{
@@ -604,10 +610,9 @@ char* kml_vsprintf(const char* src, kml_va_list args)
 					}
 					long long ll_case = kml_va_arg(args, long long);
 					kml_nlltoa(ll_case, buffer, length, 10);
-					length++;
-					while(ll_case /= 10)
-						length++;
+					length += kml_strlen(buffer + length) - 1;
 					break;
+				}
 
 				case 'h':
 				{
@@ -617,11 +622,8 @@ char* kml_vsprintf(const char* src, kml_va_list args)
 
 					short sh_case = kml_va_arg(args, short);
 					kml_nitoa((int)sh_case, buffer, length, 10);
-					length++;
-					while(ll_case /= 10)
-						length++;
+					length += kml_strlen(buffer + length) - 1;
 					break;
-				}
 				}
 
 				case 'i' : 
@@ -629,9 +631,7 @@ char* kml_vsprintf(const char* src, kml_va_list args)
 				{
 					int d_case = kml_va_arg(args, int);
 					kml_nitoa(d_case, buffer, length, 10);
-					length++;
-					while(d_case /= 10)
-						length++;
+					length += kml_strlen(buffer + length) - 1;
 					break;
 				}
 
@@ -648,19 +648,19 @@ char* kml_vsprintf(const char* src, kml_va_list args)
 				case 'f' :
 				{
 					double f_case = kml_va_arg(args, double);
-					int precision = 4;
-					kml_nftoa(f_case, buffer, length, precision);
-					while(precision--)
-						f_case *= 10;
-
-					long length_manager = (long)f_case;
-					length++;
-					while(length_manager /= 10)
-						length++;
+					kml_nftoa(f_case, buffer, length, 4);
+					length += kml_strlen(buffer + length) - 1;
 					break;
 				}
 				
-				case 'p' : break;
+				case 'p' :
+				{
+					unsigned long int p_case = (unsigned long int)kml_va_arg(args, void*);
+					kml_stradd(buffer, "0x");
+					kml_nlltoa(p_case, buffer, length + 2, 16);
+					length += kml_strlen(buffer + length) - 1;
+					break;
+				}
 				
 				default : break;
 			}
