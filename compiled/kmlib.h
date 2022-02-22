@@ -2,7 +2,7 @@
 // 
 // AUTHOR: kbz_8
 // CREATED: 01/09/2021
-// UPDATED: 21/02/2022
+// UPDATED: 22/02/2022
 
 #ifndef __KMlib__
 #define __KMlib__
@@ -12,17 +12,16 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 
-#define malloc(x) kml_malloc(x) // replacing all malloc by kml_malloc due to conflict between malloc and mmap
-#define realloc(x) kml_realloc(x)
-#define calloc(x, y) kml_calloc(x, y)
-#define free(x) kml_free(x)
-
 typedef enum { false = 0, true = 1 } bool;
 
 typedef char* kml_va_list;
 #define kml_va_start(ap, parmn) (void)((ap) = (char*)(&(parmn) + 1))
 #define kml_va_arg(ap, type) (((type*)((ap) = ((ap) + sizeof(type))))[-1]) // wtf
 #define kml_va_end(ap) (void)((ap) = 0)
+
+#ifndef CHAR_BIT
+#	define CHAR_BIT 8
+#endif
 
 void* kml_malloc(size_t size);
 void* kml_malloc_shaired(size_t size);
@@ -41,7 +40,7 @@ void kml_printf(const char* out, ...);
 size_t kml_strlen(const char* str);
 void kml_strcpy(char* dest, const char* src);
 void kml_strrev(char* arr, int start, int end);
-void kml_vsprintf(char* dest, const char* src, kml_va_list args);
+char* kml_vsprintf(const char* src, kml_va_list args);
 
 #endif // __KMlib__
 

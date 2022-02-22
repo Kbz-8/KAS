@@ -2,7 +2,7 @@
 // 
 // AUTHOR: kbz_8
 // CREATED: 01/09/2021
-// UPDATED: 21/02/2022
+// UPDATED: 22/02/2022
 
 #include "kmlib.h"
 
@@ -82,7 +82,7 @@ void* kml_malloc(size_t size)
 	if(block_ptr == MAP_FAILED)
 	{
 		kml_print("\033[0;31m");
-		printf("kmlib error: unable to alloc map of size : %d\n", size);
+		kml_printf("kmlib error: unable to alloc map of size : %d\n", size);
 		kml_print("\033[0m");
 		return NULL;
 	}
@@ -92,7 +92,7 @@ void* kml_malloc(size_t size)
 	if(!block_ptr)
 	{
 		kml_print("\033[0;31m");
-		printf("kmlib error: unable to alloc %d size\n", size);
+		kml_printf("kmlib error: unable to alloc %d size\n", size);
 		kml_print("\033[0m");
 		return NULL;
 	}
@@ -120,7 +120,7 @@ void* kml_malloc_shared(size_t size)
 	if(block_ptr == MAP_FAILED)
 	{
 		kml_print("\033[0;31m");
-		printf("kmlib error: unable to alloc map of size : %d\n", size);
+		kml_printf("kmlib error: unable to alloc map of size : %d\n", size);
 		kml_print("\033[0m");
 		return NULL;
 	}
@@ -155,7 +155,7 @@ int kml_free(void* ptr)
 			alloc_size = finder->size;
 
 			remove_block(finder);
-			if(munmap(finder, alloc_size) != 0)
+			if(munmap(finder, alloc_size) != 0) // free
 			{
 				kml_print("\033[0;31m");
 				kml_print("kmlib error: unable to unmap pointer\n");
@@ -198,7 +198,7 @@ void* kml_realloc(void* ptr, size_t size)
 			if(!newPtr)
 			{
 				kml_print("\033[0;31m");
-				printf("kmlib error: unable to realloc %d size\n", size);
+				kml_printf("kmlib error: unable to realloc %d size\n", size);
 				kml_print("\033[0m");
 				return NULL;
 			}
@@ -214,7 +214,7 @@ void* kml_calloc(size_t n, size_t size)
 	if(!ptr)
 	{
 		kml_print("\033[0;31m");
-		printf("kmlib error: unable to calloc %d size\n", size);
+		kml_printf("kmlib error: unable to calloc %d size\n", size);
 		kml_print("\033[0m");
 		return NULL;
 	}
@@ -265,7 +265,7 @@ void kml_end_gc()
 		{
 			printf("\033[0;35m");
 			#ifndef KML_GC_DONT_FREE_LEAKS
-				printf("kmlib GC warning: leak of %lld bytes has been detected ! freeing the memory leak [#define KML_GC_DONT_FREE_LEAKS to avoid that]\n", gc_leaks_bytes);
+				kml_printf("kmlib GC warning: leak of %lld bytes has been detected ! freeing the memory leak [#define KML_GC_DONT_FREE_LEAKS to avoid that]\n", gc_leaks_bytes);
 				block* free = head;
 				void* ptr = NULL;
 				do
@@ -276,7 +276,7 @@ void kml_end_gc()
 					free = head;
 				} while(head != tail);
 			#else
-				printf("kmlib GC warning: leak of %lld bytes has been detected ! \n", gc_leaks_bytes);
+				kml_printf("kmlib GC warning: leak of %lld bytes has been detected ! \n", gc_leaks_bytes);
 			#endif
 		}
 		else
@@ -307,7 +307,12 @@ size_t kml_strlen(const char* str)
 
 void kml_strcpy(char* dest, const char* src)
 {
-	kml_memcpy(dest, src, kml_strlen(src));
+	kml_memcpy(dest, src, kml_strlen(src) - 1);
+}
+
+void kml_stradd(char* dest, const char* src)
+{
+	kml_memcpy(dest + kml_strlen(dest) - 1, src, kml_strlen(src) - 1);
 }
 
 void kml_print(const char* out)
@@ -345,16 +350,15 @@ void kml_println(const char* out)
 
 void kml_printf(const char* out, ...)
 {
-	char* buffer = kml_malloc(kml_strlen(out) + 255);
 	kml_va_list args = NULL;
 	kml_va_start(args, out);
 
-	kml_vsprintf(buffer, out, args);
+	char* buffer = kml_vsprintf(out, args);
 
 	kml_va_end(args);
 
 	int fd = open("/home/bilbo/Documents/Programmation/c/kmlib/out/out", O_APPEND); // TODO : relative path
-	size_t map_size = kml_strlen(out);
+	size_t map_size = kml_strlen(buffer);
 
 	char* out_buffer = mmap(NULL, map_size, PROT_READ | PROT_WRITE, MAP_FILE | MAP_PRIVATE, fd, 0);
 
@@ -364,6 +368,7 @@ void kml_printf(const char* out, ...)
 	kml_memcpy((void*)out_buffer, (void*)buffer, map_size);
 
 	fwrite(out_buffer, 1, map_size, stdout);
+	fflush(stdout);
 
 	close(fd);
 	kml_free(buffer);
@@ -390,9 +395,9 @@ void kml_strrev(char* arr, int start, int end)
 	kml_strrev(arr, start + 1, end - 1);
 }
 
-char* kml_itoa(int num, char* dest, int base)
+char* kml_nitoa(int num, char* dest, int pos, int base)
 {
-	int i = 0;
+	int i = pos;
 	int r = 0;
 	bool negative = false;
 
@@ -408,12 +413,45 @@ char* kml_itoa(int num, char* dest, int base)
 		negative = true;
 	}
 
+	if(negative == true)
+	{
+		dest[i] = '-';
+		i++;
+	}
+
 	while(num != 0)
 	{
 		r = num % base;
 		dest[i] = (r > 9) ? (r - 10) + 'a' : r + '0';
 		i++;
 		num /= base;
+	}
+	kml_strrev(dest, pos, i - 1);
+
+	return dest;
+}
+
+char* kml_itoa(int num, char* dest, int base)
+{
+	return kml_nitoa(num, dest, 0, base);
+}
+
+char* kml_nlltoa(long long num, char* dest, int pos, int base)
+{
+	int i = pos;
+	int r = 0;
+	bool negative = false;
+
+	if(num == 0)
+	{
+		dest[i] = '0';
+		dest[i + 1] = '\0';
+		return dest;
+	}
+	if(num < 0 && base == 10)
+	{
+		num *= -1;
+		negative = true;
 	}
 
 	if(negative == true)
@@ -422,41 +460,224 @@ char* kml_itoa(int num, char* dest, int base)
 		i++;
 	}
 
-	kml_strrev(dest, 0, i - 1);
-	dest[i] = '\0';
+	while(num != 0)
+	{
+		r = num % base;
+		dest[i] = (r > 9) ? (r - 10) + 'a' : r + '0';
+		i++;
+		num /= base;
+	}
+	kml_strrev(dest, pos, i - 1);
+
 	return dest;
 }
 
-void kml_vsprintf(char* dest, const char* src, kml_va_list args)
+char* kml_lltoa(long long num, char* dest, int base)
+{
+	return kml_nlltoa(num, dest, 0, base);
+}
+
+#define MAX_PRECISION 10
+static const double rounders[MAX_PRECISION + 1] = {
+	0.5,
+	0.05,
+	0.005,
+	0.0005,
+	0.00005,
+	0.000005,
+	0.0000005,
+	0.00000005,
+	0.000000005,
+	0.0000000005,
+	0.00000000005,
+};
+
+char* kml_nftoa(double num, char* dest, int pos, int precision)
+{
+	int start_pos = 0;
+	char c = 0;
+	long int_part = 0;
+	size_t length = pos;
+
+	if(precision > MAX_PRECISION)
+		precision = MAX_PRECISION;
+
+	if(num < 0)
+	{
+		num = -num;
+		dest[length] = '-';
+		length++;
+	}
+
+	if(precision < 0)
+	{
+		if(num < 1.0) precision = 6;
+		else if(num < 10.0) precision = 5;
+		else if(num < 100.0) precision = 4;
+		else if(num < 1000.0) precision = 3;
+		else if(num < 10000.0) precision = 2;
+		else if(num < 100000.0) precision = 1;
+		else precision = 0;
+	}
+
+	if(precision)
+		num += rounders[precision];
+
+	int_part = (long)num;
+	num -= int_part;
+
+	if(!int_part)
+	{
+		dest[length] = '0';
+		length++;
+	}
+	else
+	{
+		start_pos = length;
+		while(int_part)
+		{
+			dest[length] = '0' + int_part % 10;
+			length++;
+			int_part /= 10;
+		}
+		kml_strrev(dest, start_pos, length);
+	}
+
+	if(precision)
+	{
+		dest[length] = '.';
+		length++;
+
+		while(precision--)
+		{
+			num *= 10;
+			c = num;
+			dest[length] = '0' + c;
+			num -= c;
+		}
+	}
+
+	return dest;
+}
+
+char* kml_ftoa(double num, char* dest, int precision)
+{
+	kml_nftoa(num, dest, 0, precision);
+}
+
+char* kml_vsprintf(const char* src, kml_va_list args)
 {
 	char c = 0;
-	char* s_case = NULL;
-	float f_case = 0;
-	int d_case = 0;
-	char* buffer = kml_malloc(sizeof(char) * 512);
+	size_t max_length = kml_strlen(src) + 256;
+	char* buffer = (char*)kml_malloc(sizeof(char) * max_length);
 	size_t length = 0;
 
 	while(c = *src++)
 	{
+		if(length > max_length)
+		{
+			max_length += 256;
+			buffer = (char*)kml_realloc(buffer, max_length);
+		}
+		
 		if(c == '%')
 		{
 			switch(c = *src++)
 			{
 				case '%' : buffer[length] = '%'; length++; break;
-				case 'c' : buffer[length] = kml_va_arg(args, int); length++; break;
-				case 's' : s_case = kml_va_arg(args, char*); /*TODO : strings management*/; length += kml_strlen(s_case); break;
-				case 'd' : d_case = kml_va_arg(args, int); kml_itoa(d_case, buffer, 10); length += kml_strlen(buffer); break;
-				case 'x' : d_case = kml_va_arg(args, int); kml_itoa(d_case, buffer, 16); length += kml_strlen(buffer); break;
-				case 'f' : f_case = kml_va_arg(args, double);  break; // TODO
+				
+				case 'c' : buffer[length] = kml_va_arg(args, char); length++; break;
+				
+				case 's' : char* s_case = kml_va_arg(args, char*); kml_stradd(buffer, s_case); length += kml_strlen(s_case) - 1; s_case = NULL; break;
+				
+				case 'l':
+				{
+					c = *src++;
+					if(c != 'd' && c != 'i')
+					{
+						c = *src++;
+						if(c != 'd' && c != 'i')
+							break;
+					}
+					long long ll_case = kml_va_arg(args, long long);
+					kml_nlltoa(ll_case, buffer, length, 10);
+					length++;
+					while(ll_case /= 10)
+						length++;
+					break;
+
+				case 'h':
+				{
+					c = *src++;
+					if(c != 'd' && c != 'i')
+						break;
+
+					short sh_case = kml_va_arg(args, short);
+					kml_nitoa((int)sh_case, buffer, length, 10);
+					length++;
+					while(ll_case /= 10)
+						length++;
+					break;
+				}
+				}
+
+				case 'i' : 
+				case 'd' :
+				{
+					int d_case = kml_va_arg(args, int);
+					kml_nitoa(d_case, buffer, length, 10);
+					length++;
+					while(d_case /= 10)
+						length++;
+					break;
+				}
+
+				case 'X' :
+				case 'x' :
+				{
+					int d_case = kml_va_arg(args, int);
+					kml_nitoa(d_case, buffer, length, 16);
+					length += sizeof(d_case) * CHAR_BIT / 4;
+					break;
+				}
+
+				case 'F' :
+				case 'f' :
+				{
+					double f_case = kml_va_arg(args, double);
+					int precision = 4;
+					kml_nftoa(f_case, buffer, length, precision);
+					while(precision--)
+					{
+						f_case *= 10;
+					}
+					f_case = (long)f_case;
+					length++;
+					while(f_case /= 10)
+						length++;
+					break;
+				}
+				
+				case 'E' :
 				case 'e' : break; // TODO
 
+				case 'O' :
+				case 'o' : break;
+
+				case 'p' : break;
+
+				case 'u' : break;
+
+				
 				default : break;
 			}
 		}
 		else
+		{
 			buffer[length] = c;
+			length++;
+		}
 	}
-	kml_strcpy(dest, buffer);
-	kml_free(buffer);
+	return buffer;
 }
 
