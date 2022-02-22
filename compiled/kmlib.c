@@ -295,6 +295,9 @@ void kml_init_gc()
 
 size_t kml_strlen(const char* str)
 {
+	if(str == NULL)
+		return 0;
+
 	char c = *str;
 	size_t size = 0;
 	while(c != '\0')
@@ -368,7 +371,6 @@ void kml_printf(const char* out, ...)
 	kml_memcpy((void*)out_buffer, (void*)buffer, map_size);
 
 	fwrite(out_buffer, 1, map_size, stdout);
-	fflush(stdout);
 
 	close(fd);
 	kml_free(buffer);
@@ -553,6 +555,7 @@ char* kml_nftoa(double num, char* dest, int pos, int precision)
 			num *= 10;
 			c = num;
 			dest[length] = '0' + c;
+			length++;
 			num -= c;
 		}
 	}
@@ -579,7 +582,7 @@ char* kml_vsprintf(const char* src, kml_va_list args)
 			max_length += 256;
 			buffer = (char*)kml_realloc(buffer, max_length);
 		}
-		
+
 		if(c == '%')
 		{
 			switch(c = *src++)
@@ -637,7 +640,7 @@ char* kml_vsprintf(const char* src, kml_va_list args)
 				{
 					int d_case = kml_va_arg(args, int);
 					kml_nitoa(d_case, buffer, length, 16);
-					length += sizeof(d_case) * CHAR_BIT / 4;
+					length += kml_strlen(buffer + length) - 1;
 					break;
 				}
 
@@ -648,26 +651,16 @@ char* kml_vsprintf(const char* src, kml_va_list args)
 					int precision = 4;
 					kml_nftoa(f_case, buffer, length, precision);
 					while(precision--)
-					{
 						f_case *= 10;
-					}
-					f_case = (long)f_case;
+
+					long length_manager = (long)f_case;
 					length++;
-					while(f_case /= 10)
+					while(length_manager /= 10)
 						length++;
 					break;
 				}
 				
-				case 'E' :
-				case 'e' : break; // TODO
-
-				case 'O' :
-				case 'o' : break;
-
 				case 'p' : break;
-
-				case 'u' : break;
-
 				
 				default : break;
 			}

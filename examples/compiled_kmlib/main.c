@@ -4,7 +4,6 @@
 // CREATED: 02/09/2021
 // UPDATED: 22/02/2022
 
-#include <stdio.h>
 #include "../../compiled/kmlib.h"
 
 int main(int argc, char** argv)
@@ -15,13 +14,12 @@ int main(int argc, char** argv)
 	printf("%p\n", ptr);
 	kml_free(ptr);
 
-	char str[16] = "this is a string";
-	kml_strrev(str, 0, 16);
-	kml_println(str);
-
-	kml_println("new test");
-	float x = 123.23;
+	float x = 123.23345564;
 	kml_printf("new test2 %f \n", x);
+
+	const char c = 'a';
+	const char* str2 = "string";
+	kml_printf("final test : %d, %x, %f, %c, %s, %% \n", 42, 434542, 12.45, c, str2);
 
 	kml_end_gc();
 
