@@ -2,15 +2,18 @@
 // 
 // AUTHOR: kbz_8
 // CREATED: 01/09/2021
-// UPDATED: 22/02/2022
+// UPDATED: 16/05/2022
 
 #ifndef __KMlib__
 #define __KMlib__
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/mman.h>
-#include <fcntl.h>
+
+#define malloc(x) kml_malloc(x) // replacing all malloc by kml_malloc due to conflict between malloc and sbrk
+#define realloc(x) kml_realloc(x)
+#define calloc(x, y) kml_calloc(x, y)
+#define free(x) kml_free(x)
 
 typedef enum { false = 0, true = 1 } bool;
 
@@ -24,7 +27,7 @@ typedef char* kml_va_list;
 #endif
 
 void* kml_malloc(size_t size);
-void* kml_malloc_shaired(size_t size);
+void* kml_malloc_shared(size_t size);
 int kml_free(void* ptr);
 void* kml_realloc(void* ptr, size_t size);
 void* kml_calloc(size_t n, size_t size);

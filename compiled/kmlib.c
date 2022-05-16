@@ -2,9 +2,25 @@
 // 
 // AUTHOR: kbz_8
 // CREATED: 01/09/2021
-// UPDATED: 22/02/2022
+// UPDATED: 16/05/2022
 
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include "kmlib.h"
+
+#define	MAP_FILE	0x0001
+#define	MAP_ANON	0x0002
+#define	MAP_TYPE	0x000f
+
+#define	MAP_COPY	0x0020
+#define	MAP_SHARED	0x0010
+#define	MAP_PRIVATE	0x0000
+
+#define	MAP_FIXED	0x0100
+#define	MAP_NOEXTEND	0x0200
+#define	MAP_HASSEMPHORE	0x0400
+#define	MAP_INHERIT	0x0800
 
 typedef struct block
 {
@@ -250,9 +266,7 @@ void* kml_memcpy(void* dest, void* src, size_t size)
 	if(dest != NULL && src != NULL)
 	{
 		while(size--)
-		{
 			*p_dest++ = *p_src++;
-		}
 	}
 	return dest;
 }
@@ -290,7 +304,6 @@ void kml_init_gc()
 {
 	gc_leaks_bytes = 0;
 	is_gc_init = true;
-	atexit(kml_end_gc);
 }
 
 size_t kml_strlen(const char* str)
@@ -369,7 +382,7 @@ void kml_printf(const char* out, ...)
 	if(out_buffer == MAP_FAILED)
 		return;
 
-	kml_strcpy(out_buffer, buffer);
+	kml_memcpy((void*)out_buffer, (void*)buffer, map_size);
 
 	fwrite(out_buffer, 1, map_size, stdout);
 
