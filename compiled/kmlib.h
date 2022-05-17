@@ -40,10 +40,12 @@ void kml_end_gc();
 void kml_print(const char* out);
 void kml_println(const char* out);
 void kml_printf(const char* out, ...);
+
 size_t kml_strlen(const char* str);
 void kml_strcpy(char* dest, const char* src);
 void kml_stradd(char* dest, const char* src);
 void kml_strrev(char* arr, int start, int end);
+
 char* kml_vsprintf(const char* src, kml_va_list args);
 
 char* kml_nitoa(int num, char* dest, int pos, int base);

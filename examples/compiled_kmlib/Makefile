@@ -1,5 +1,5 @@
 C = gcc
-CFLAGS = -std=c11
+CFLAGS = -std=gnu11 -w
 
 DEBUG ?= no
 

@@ -2,25 +2,12 @@
 // 
 // AUTHOR: kbz_8
 // CREATED: 01/09/2021
-// UPDATED: 16/05/2022
+// UPDATED: 17/05/2022
 
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include "kmlib.h"
-
-#define	MAP_FILE	0x0001
-#define	MAP_ANON	0x0002
-#define	MAP_TYPE	0x000f
-
-#define	MAP_COPY	0x0020
-#define	MAP_SHARED	0x0010
-#define	MAP_PRIVATE	0x0000
-
-#define	MAP_FIXED	0x0100
-#define	MAP_NOEXTEND	0x0200
-#define	MAP_HASSEMPHORE	0x0400
-#define	MAP_INHERIT	0x0800
 
 typedef struct block
 {
@@ -93,25 +80,19 @@ void* kml_malloc(size_t size)
 	void* ptr = NULL;
 	block* block_ptr = head;
 
-	block_ptr = mmap(NULL, size + sizeof(block), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANON | MAP_PRIVATE, 0, 0);
+	block_ptr = mmap(NULL, size + sizeof(block), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
 
 	if(block_ptr == MAP_FAILED)
+		block_ptr = sbrk(size); // calling system allocation function
+
+	if(!block_ptr)
 	{
-		kml_print("\033[0;31m");
-		kml_printf("kmlib error: unable to alloc map of size : %d\n", size);
-		kml_print("\033[0m");
+		kml_printf("\033[0;31mkmlib error: unable to alloc %d bytes\033[0m\n", size);
 		return NULL;
 	}
 
 	block_ptr->size = size;
 	add_block(block_ptr);
-	if(!block_ptr)
-	{
-		kml_print("\033[0;31m");
-		kml_printf("kmlib error: unable to alloc %d size\n", size);
-		kml_print("\033[0m");
-		return NULL;
-	}
 	ptr = (void*)((unsigned long)block_ptr + sizeof(block));
 
 	if(is_gc_init)
@@ -131,13 +112,11 @@ void* kml_malloc_shared(size_t size)
 	void* ptr = NULL;
 	block* block_ptr = head;
 
-	block_ptr = mmap(NULL, size + sizeof(block), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANON | MAP_SHARED, 0, 0);
+	block_ptr = mmap(NULL, size + sizeof(block), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANONYMOUS | MAP_SHARED, 0, 0);
 
 	if(block_ptr == MAP_FAILED)
 	{
-		kml_print("\033[0;31m");
-		kml_printf("kmlib error: unable to alloc map of size : %d\n", size);
-		kml_print("\033[0m");
+		kml_printf("\033[0;31mkmlib error: unable to alloc map of size : %d\033[0m\n", size);
 		return NULL;
 	}
 
@@ -173,9 +152,7 @@ int kml_free(void* ptr)
 			remove_block(finder);
 			if(munmap(finder, alloc_size) != 0) // free
 			{
-				kml_print("\033[0;31m");
-				kml_print("kmlib error: unable to unmap pointer\n");
-				kml_print("\033[0m");
+				kml_print("\033[0;31mkmlib error: unable to unmap pointer\033[0m\n");
 				ptr = NULL;
 				return 0;
 			}
@@ -213,9 +190,7 @@ void* kml_realloc(void* ptr, size_t size)
 
 			if(!newPtr)
 			{
-				kml_print("\033[0;31m");
-				kml_printf("kmlib error: unable to realloc %d size\n", size);
-				kml_print("\033[0m");
+				kml_printf("\033[0;31mkmlib error: unable to realloc %d bytes\033[0m\n", size);
 				return NULL;
 			}
 			return newPtr;
@@ -229,9 +204,7 @@ void* kml_calloc(size_t n, size_t size)
 	void* ptr = kml_malloc(n * size);
 	if(!ptr)
 	{
-		kml_print("\033[0;31m");
-		kml_printf("kmlib error: unable to calloc %d size\n", size);
-		kml_print("\033[0m");
+		kml_printf("\033[0;31mkmlib error: unable to calloc %d bytes\033[0m\n", size);
 		return NULL;
 	}
 	kml_memset(ptr, 0, n * size);
@@ -279,7 +252,7 @@ void kml_end_gc()
 		{
 			printf("\033[0;35m");
 			#ifndef KML_GC_DONT_FREE_LEAKS
-				kml_printf("kmlib GC warning: leak of %lld bytes has been detected ! freeing the memory leak [#define KML_GC_DONT_FREE_LEAKS to avoid that]\n", gc_leaks_bytes);
+				kml_printf("kmlib GC warning: leak of %lld bytes has been detected ! freeing the memory leak... [#define KML_GC_DONT_FREE_LEAKS to avoid that]\n", gc_leaks_bytes);
 				block* free = head;
 				void* ptr = NULL;
 				do
@@ -405,7 +378,7 @@ void kml_strrev(char* arr, int start, int end)
 	// b = a ^ b
 	// a = a ^ b
 	*(arr + start) = *(arr + start) ^ *(arr + end);
-	*(arr + end)   = *(arr + start) ^ *(arr + end); // a bit tricky
+	*(arr + end)   = *(arr + start) ^ *(arr + end);
 	*(arr + start) = *(arr + start) ^ *(arr + end);
 	
 	kml_strrev(arr, start + 1, end - 1);
@@ -640,7 +613,6 @@ char* kml_vsprintf(const char* src, kml_va_list args)
 				}
 
 				case 'i' : 
-				case 'd' :
 				{
 					int d_case = kml_va_arg(args, int);
 					kml_nitoa(d_case, buffer, length, 10);
@@ -657,6 +629,7 @@ char* kml_vsprintf(const char* src, kml_va_list args)
 					break;
 				}
 
+				case 'd' :
 				case 'F' :
 				case 'f' :
 				{
