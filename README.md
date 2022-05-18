@@ -1,5 +1,5 @@
 # kmlib Project
-kmlib (kbz_8 memory library) Project is a mini project made for fun. It is a memory lib that contains allocator, garbage collector and memory manager. It is rather light. There are a compiled version (with a .c file) and a header only version (easy to implement in your projects (include "kmlib.h") but it is slower).
+kmlib (kbz_8 main library) is a mini project made for fun. It is a little lib that contains allocators, garbage collector, memory manager, io functions, strings functions... It is rather light.
 
 This lib works only on Unix systems for now but it may become Windows compatible one day...
 
@@ -15,28 +15,27 @@ Garbage collector works with kmlib allocators. It can check your memory manageme
 It is used like this:
 
 ```C
-#include "kmlib.h"
+#include <kmlib.h>
 
 int main(int argc, char** argv)
 {
-	kml_init_gc(); // initialize Garbage collector monitoring
+	km_init_gc(); // initialize Garbage collector monitoring
 
-	char* ptr = kml_malloc(256);
+	char* ptr = km_malloc(256);
 
 	// end Garbage collector monitoring
-	kml_end_gc(); // warning leak of 256 bytes has been detected ! Freeing the memory [#define KML_GC_DONT_FREE_LEAKS to avoid that]
+	km_end_gc(); // warning leak of 256 bytes has been detected ! Freeing the memory... [#define KM_GC_DONT_FREE_LEAKS to avoid that]
 
 	return 0;
 }
 ```
-If ```kml_init_gc()``` was called without ending GC it will be called at program exit.
 
 ## Macros to set kmlib
 
 This is the list of macros that can be defined to modify the behaviour oh kmlib :
-* KML_MEMSET_AUTO_MALLOC : kml_memset allocate the size passed if the pointer passed is NULL
-* KML_MEMCPY_AUTO_MALLOC : kml_memcpy allocate the size passed if the destination pointer passed is NULL
-* KML_GC_DONT_FREE_LEAKS : kml_end_gc says what leaks you have but don't free the memory leak
+* KM_MEMSET_AUTO_MALLOC : km_memset allocate the size passed if the pointer passed is NULL
+* KM_MEMCPY_AUTO_MALLOC : km_memcpy allocate the size passed if the destination pointer passed is NULL
+* KM_GC_DONT_FREE_LEAKS : km_end_gc says what leaks you have but don't free the memory leak
 
 ### Contact
 kbz_8.dev@akel-engine.com
