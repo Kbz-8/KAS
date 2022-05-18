@@ -23,18 +23,22 @@
 
 #include <kmlib.h>
 
-void km_print(const char* out)
+size_t km_print(const char* out)
 {
-	write(STDOUT_FILENO, out, km_strlen(out));
+    size_t len = km_strlen(out);
+	write(STDOUT_FILENO, out, len);
+    return len;
 }
 
-void km_println(const char* out)
+size_t km_println(const char* out)
 {
-	write(STDOUT_FILENO, out, km_strlen(out));
+    size_t len = km_strlen(out);
+	write(STDOUT_FILENO, out, len);
 	write(STDOUT_FILENO, "\n", 1);
+    return len + 1;
 }
 
-void km_printf(const char* out, ...)
+size_t km_printf(const char* out, ...)
 {
 	km_va_list args = NULL;
 	km_va_start(args, out);
@@ -43,5 +47,9 @@ void km_printf(const char* out, ...)
 
 	km_va_end(args);
 
-	write(STDOUT_FILENO, buffer, km_strlen(buffer));
+    size_t len = km_strlen(buffer);
+
+	write(STDOUT_FILENO, buffer, len);
+
+    return len;
 }

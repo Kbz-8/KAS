@@ -20,19 +20,12 @@
 #ifndef __KM_MEMORY__
 #define __KM_MEMORY__
 
+#include "km_alltypes.h"
+
 #define malloc(x) km_malloc(x) // replacing all malloc by km_malloc due to conflict between malloc and sbrk
 #define realloc(x) km_realloc(x)
 #define calloc(x, y) km_calloc(x, y)
 #define free(x) km_free(x)
-
-#ifndef CHAR_BIT
-#	define CHAR_BIT 8
-#endif
-
-#undef NULL
-#define NULL ((char*)0)
-
-typedef enum { false = 0, true = 1 } bool;
 
 void* km_malloc(size_t size);
 void* km_malloc_shared(size_t size);

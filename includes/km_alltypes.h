@@ -17,25 +17,25 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __KMLIB__
-#define __KMLIB__
+#ifndef __KM_ALLTYPES__
+#define __KM_ALLTYPES__
 
-#include "km_io.h"
-#include "km_memory.h"
-#include "km_strings.h"
-#include "km_va_args.h"
-#include "km_alltypes.h"
+#ifndef NULL
+#	define NULL ((char*)0)
+#endif
 
-#define km_abort() km_println("kmlib abortion"); km_exit()
-#define exit(status) km_exit(status)
-#define atexit(func) km_atexit(func)
+#ifndef CHAR_BIT
+#	define CHAR_BIT 8
+#endif
 
-void km_exit();
-int km_atexit(void (*func)(void));
+#define KM_MAX_PRECISION 10
 
-void km_assert(int cond, const char* file, const char* line);
+typedef unsigned long size_t;
 
-#undef km_assert
-#define km_assert(cond) km_assert(cond, __FILE__, __LINE__)
+#if defined(__GNUC__) || defined(__clang__) || defined(__MINGW32__)
+    typedef enum __attribute__((__packed__)) { false = 0, true = 1 } bool;
+#else
+    typedef enum { false = 0, true = 1 } bool;
+#endif
 
-#endif // __KMLIB__
+#endif // __KM_ALL_TYPES__

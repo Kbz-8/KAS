@@ -21,6 +21,7 @@
 #define __KM_STRINGS__
 
 #include "km_va_args.h"
+#include "km_alltypes.h"
 
 size_t km_strlen(const char* str);
 void km_strcpy(char* dest, const char* src);
@@ -33,7 +34,6 @@ char* km_nitoa(int num, char* dest, int pos, int base);
 char* km_itoa(int num, char* dest, int base);
 char* km_nlltoa(long long num, char* dest, int pos, int base);
 char* km_lltoa(long long num, char* dest, int base);
-#define KM_MAX_PRECISION 10
 char* km_nftoa(double num, char* dest, int pos, int precision);
 char* km_ftoa(double num, char* dest, int precision);
 

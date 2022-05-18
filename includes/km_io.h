@@ -20,8 +20,10 @@
 #ifndef __KM_IO__
 #define __KM_IO__
 
-void km_print(const char* out);
-void km_println(const char* out);
-void km_printf(const char* out, ...);
+#include "km_alltypes.h"
+
+size_t km_print(const char* out);
+size_t km_println(const char* out);
+size_t km_printf(const char* out, ...);
 
 #endif // __KM_IO__

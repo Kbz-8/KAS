@@ -17,8 +17,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#undef NULL
-#define NULL ((char*)0)
+#include <km_alltypes.h>
+
+void __km_asm_interal_exit();
 
 typedef void (*exit_fn)(void);
 
@@ -30,19 +31,35 @@ typedef struct
 
 static __exit_func_list __main_exit_func_list = { 0, {} };
 
-void km_assert(int cond)
-{
-    
-}
+#ifdef NDEBUG
+    void km_assert(int cond, const char* file, const char* line) {}
+#else
+    void km_assert(int cond, const char* file, const char* line)
+    {
+        if(!cond)
+        {
+            km_printf("assertion failed : %s, %s", file, line);
+            km_exit();
+        }
+    }
+#endif
 
-void km_exit(int status)
+void km_exit()
 {
-
+    if(__main_exit_func_list.num_of_func > 0)
+    {
+        while(__main_exit_func_list.num_of_func != 0)
+        {
+            __main_exit_func_list.functions[__main_exit_func_list.num_of_func - 1]();
+            __main_exit_func_list.num_of_func--;
+        }
+    }
+    __km_asm_interal_exit();
 }
 
 int km_atexit(void (*func)(void))
 {
-    km_assert(func != NULL);
+    km_assert(func != NULL, __FILE__, __LINE__);
     __main_exit_func_list.functions[__main_exit_func_list.num_of_func] = func;
     __main_exit_func_list.num_of_func++;
 }
