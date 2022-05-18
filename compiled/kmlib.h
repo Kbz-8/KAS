@@ -40,6 +40,8 @@ void* kml_memcpy(void* dest, void* src, size_t size);
 void kml_exit(int status);
 int kml_atexit(void (*func)(void));
 
+void kml_assert(int cond);
+
 void kml_init_gc();
 void kml_end_gc();
 
