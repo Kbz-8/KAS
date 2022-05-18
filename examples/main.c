@@ -8,7 +8,7 @@
 
 int main(int argc, char** argv)
 {
-	km_printf("test, %d\n", 2);
+	km_printf("test, %i\n", 2);
 
 	return 0;
 }

@@ -54,10 +54,6 @@ void km_strrev(char* arr, int start, int end)
 		end--;
 
 	// Fast variable inversion with XOR operation
-	// 
-	// a = a ^ b
-	// b = a ^ b
-	// a = a ^ b
 	*(arr + start) = *(arr + start) ^ *(arr + end);
 	*(arr + end)   = *(arr + start) ^ *(arr + end);
 	*(arr + start) = *(arr + start) ^ *(arr + end);
