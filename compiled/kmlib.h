@@ -15,6 +15,10 @@
 #define calloc(x, y) kml_calloc(x, y)
 #define free(x) kml_free(x)
 
+#define kml_abort() (kml_println("abortion") && *((char*)0))
+#define sexit(status) kml_exit(status)
+#define atexit(func) kml_atexit(func)
+
 typedef enum { false = 0, true = 1 } bool;
 
 typedef char* kml_va_list;
@@ -34,16 +38,13 @@ void* kml_calloc(size_t n, size_t size);
 void* kml_memset(void* ptr, int c, size_t size);
 void* kml_memcpy(void* dest, void* src, size_t size);
 
-#define exit(status) kml_exit(status)
-#define atexit(func) kml_atexit(func)
-
 void kml_exit(int status);
 int kml_atexit(void (*func)(void));
 
 void kml_assert(int cond);
 
-void kml_init_gc();
-void kml_end_gc();
+void kml_init_gc(void);
+void kml_end_gc(void);
 
 void kml_print(const char* out);
 void kml_println(const char* out);

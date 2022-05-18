@@ -16,7 +16,8 @@ static __exit_func_list __main_exit_func_list = { 0, NULL };
 
 void kml_assert(int cond)
 {
-    
+    if(!cond)
+        exit()
 }
 
 void kml_exit(int status)
