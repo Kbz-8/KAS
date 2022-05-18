@@ -3,11 +3,41 @@ kmlib (kbz_8 main library) is a mini project made for fun. It is a little lib th
 
 This lib works only on Unix systems for now but it may become Windows compatible one day...
 
-## Allocator system
+## List of kmlib's functions
+In `km_memory.h`:
+* `void* km_malloc(size_t size);`
+* `void* km_malloc_shared(size_t size);`
+* `int km_free(void* ptr);`
+* `void* km_realloc(void* ptr, size_t size);`
+* `void* km_calloc(size_t n, size_t size);`
+* `void* km_memmove(void* destination, const void* source, size_t num);`
+* `void* km_memset(void* ptr, int c, size_t size);`
+* `void* km_memcpy(void* dest, void* src, size_t size);`
+* `void km_init_gc(void);`
+* `void km_end_gc(void);`
 
-<p align="center">
-	<img src="https://github.com/Kbz-8/kmlib/blob/main/schema.png" alt="drawing"/>
-</p>
+In `km_strings.h`:
+* `size_t km_strlen(const char* str);`
+* `void km_strcpy(char* dest, const char* src);`
+* `void km_stradd(char* dest, const char* src);`
+* `void km_strrev(char* arr, int start, int end);`
+* `char* km_vsprintf(const char* src, km_va_list args);`
+* `char* km_nitoa(int num, char* dest, int pos, int base);`
+* `char* km_itoa(int num, char* dest, int base);`
+* `char* km_nlltoa(long long num, char* dest, int pos, int base);`
+* `char* km_lltoa(long long num, char* dest, int base);`
+* `char* km_nftoa(double num, char* dest, int pos, int precision);`
+* `char* km_ftoa(double num, char* dest, int precision);`
+
+In `km_io.h`:
+* `void km_print(const char* out);`
+* `void km_println(const char* out);`
+* `void km_printf(const char* out, ...);`
+
+In `kmlib.h`:
+* `void km_exit(int status);`
+* `int km_atexit(void (*func)(void));`
+* `void km_assert(int cond);`
 
 ## Garbage Collector
 
