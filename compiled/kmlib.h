@@ -34,6 +34,12 @@ void* kml_calloc(size_t n, size_t size);
 void* kml_memset(void* ptr, int c, size_t size);
 void* kml_memcpy(void* dest, void* src, size_t size);
 
+#define exit(status) kml_exit(status)
+#define atexit(func) kml_atexit(func)
+
+void kml_exit(int status);
+int kml_atexit(void (*func)(void));
+
 void kml_init_gc();
 void kml_end_gc();
 

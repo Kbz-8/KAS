@@ -2,7 +2,7 @@
 // 
 // AUTHOR: kbz_8
 // CREATED: 01/09/2021
-// UPDATED: 17/05/2022
+// UPDATED: 18/05/2022
 
 #include <sys/mman.h>
 #include <fcntl.h>
@@ -21,20 +21,7 @@ static block* tail = NULL;
 static long long gc_leaks_bytes = 0;
 static bool is_gc_init = false;
 static bool is_cleanup_activated = false;
-static size_t __page_size = 0;
-
-void cleanupBlocks()
-{
-	if(head != NULL || tail != NULL)
-	{
-		block* ptr = head;
-		do
-		{
-			remove_block(ptr);
-			ptr = head;
-		} while(tail != NULL || head != NULL);
-	}
-}
+static size_t __page_size = sysconf(_SC_PAGESIZE);
 
 void add_block(block* newBlock)
 {
@@ -83,9 +70,6 @@ void* kml_malloc(size_t size)
 	block_ptr = mmap(NULL, size + sizeof(block), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
 
 	if(block_ptr == MAP_FAILED)
-		block_ptr = sbrk(size); // calling system allocation function
-
-	if(!block_ptr)
 	{
 		kml_printf("\033[0;31mkmlib error: unable to alloc %d bytes\033[0m\n", size);
 		return NULL;
