@@ -44,6 +44,12 @@ static __exit_func_list __main_exit_func_list = { 0, {} };
     }
 #endif
 
+void km_abort()
+{
+    km_println("kmlib abortion");
+    km_exit();
+}
+
 void km_exit()
 {
     if(__main_exit_func_list.num_of_func > 0)

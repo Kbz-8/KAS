@@ -26,11 +26,12 @@
 #include "km_va_args.h"
 #include "km_alltypes.h"
 
-#define km_abort() km_println("kmlib abortion"); km_exit()
-#define exit(status) km_exit(status)
+#define abort() km_abort()
+#define exit(status) km_exit()
 #define atexit(func) km_atexit(func)
 
 void km_exit();
+void km_abort();
 int km_atexit(void (*func)(void));
 
 void km_assert(int cond, const char* file, const char* line);
