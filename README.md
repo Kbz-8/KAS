@@ -38,6 +38,7 @@ In `kmlib.h`:
 * `void km_exit(int status);`
 * `int km_atexit(void (*func)(void));`
 * `void km_assert(int cond);`
+* `void km_abort()`
 
 ## Garbage Collector
 
