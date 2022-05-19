@@ -53,3 +53,24 @@ size_t km_printf(const char* out, ...)
 
     return len;
 }
+
+
+km_file km_fopen(const char* path, int mode)
+{
+	__km_asm_internal_fopen();
+}
+
+void km_fwrite(km_file file, const char* message, int len)
+{
+	__km_asm_internal_fwrite(file, message, len);
+}
+
+void km_fread(km_file file, char* buffer)
+{
+	__km_asm_internal_fread(file, buffer);
+}
+
+void km_fclose(km_file file)
+{
+	__km_asm_internal_fclose(file);
+}

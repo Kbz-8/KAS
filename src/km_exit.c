@@ -19,7 +19,7 @@
 
 #include <km_alltypes.h>
 
-void __km_asm_interal_exit();
+void __km_asm_interal_exit(int status);
 
 typedef void (*exit_fn)(void);
 
@@ -47,10 +47,10 @@ static __exit_func_list __main_exit_func_list = { 0, {} };
 void km_abort()
 {
     km_println("kmlib abortion");
-    km_exit();
+    km_exit(-1);
 }
 
-void km_exit()
+void km_exit(int status)
 {
     if(__main_exit_func_list.num_of_func > 0)
     {
@@ -60,7 +60,7 @@ void km_exit()
             __main_exit_func_list.num_of_func--;
         }
     }
-    __km_asm_interal_exit();
+    __km_asm_interal_exit(status);
 }
 
 int km_atexit(void (*func)(void))

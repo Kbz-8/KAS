@@ -38,4 +38,12 @@ typedef unsigned long size_t;
     typedef enum { false = 0, true = 1 } bool;
 #endif
 
+typedef unsigned int km_file;
+
+#define KM_F_RONLY  0b00001
+#define KM_F_WONLY  0b00010
+#define KM_F_APPEND 0b00100
+#define KM_F_CREATE 0b01000
+#define KM_F_RW     0b10000
+
 #endif // __KM_ALL_TYPES__

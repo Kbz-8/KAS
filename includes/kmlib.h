@@ -27,10 +27,10 @@
 #include "km_alltypes.h"
 
 #define abort() km_abort()
-#define exit(status) km_exit()
+#define exit(status) km_exit(status)
 #define atexit(func) km_atexit(func)
 
-void km_exit();
+void km_exit(int status);
 void km_abort();
 int km_atexit(void (*func)(void));
 

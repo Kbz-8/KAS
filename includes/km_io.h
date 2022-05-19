@@ -26,4 +26,9 @@ size_t km_print(const char* out);
 size_t km_println(const char* out);
 size_t km_printf(const char* out, ...);
 
+km_file km_fopen(const char* path, int mode);
+void km_fwrite(km_file file, const char* message, int len);
+void km_fread(km_file file, char* buffer);
+void km_fclose(km_file file);
+
 #endif // __KM_IO__
