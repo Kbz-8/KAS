@@ -19,8 +19,6 @@
 
 #include <km_alltypes.h>
 
-void __km_asm_interal_exit(int status);
-
 typedef void (*exit_fn)(void);
 
 typedef struct
@@ -60,7 +58,7 @@ void km_exit(int status)
             __main_exit_func_list.num_of_func--;
         }
     }
-    __km_asm_interal_exit(status);
+    __km_asm_internal_exit(status);
 }
 
 int km_atexit(void (*func)(void))

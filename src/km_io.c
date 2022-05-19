@@ -23,6 +23,11 @@
 
 #include <kmlib.h>
 
+km_file __km_asm_internal_fopen(const char*, int);
+void __km_asm_internal_fwrite(km_file, const char*, int);
+void __km_asm_internal_fread(km_file, char*);
+void __km_asm_internal_fclose(km_file);
+
 size_t km_print(const char* out)
 {
     size_t len = km_strlen(out);
@@ -57,7 +62,7 @@ size_t km_printf(const char* out, ...)
 
 km_file km_fopen(const char* path, int mode)
 {
-	__km_asm_internal_fopen();
+	__km_asm_internal_fopen(path, mode);
 }
 
 void km_fwrite(km_file file, const char* message, int len)

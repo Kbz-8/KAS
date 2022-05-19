@@ -16,6 +16,7 @@
 ; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 bits 64
+
 global __km_asm_internal_exit
 global __km_asm_internal_fopen
 global __km_asm_internal_fwrite
@@ -29,32 +30,29 @@ global __km_asm_internal_fclose
 %define SYS_CLOSE 6
 
 __km_asm_internal_exit:
-    mov rdi, ebx ; passing code to sys call
+    mov edi, ebx ; passing code to sys call
     mov eax, SYS_EXIT ; system call number (sys_exit)
     int 0x80   ; call kernel
 
 __km_asm_internal_fopen:
-    mov rdi, ebx
-    mov rsi, ecx
-    mov rdx, edx
+    mov edi, ebx
+    mov esi, ecx
     mov eax, SYS_OPEN ; call system file opener
     int 0x80   ; call kernel
 
 __km_asm_internal_fwrite:
-    mov rdi, ebx
-    mov rsi, ecx
-    mov rdx, edx
+    mov edi, ebx
+    mov esi, ecx
     mov eax, SYS_WRITE ; call system file writer
     int 0x80   ; call kernel
 
 __km_asm_internal_fread:
-    mov rdi, ebx
-    mov rsi, ecx
-    mov rdx, edx
+    mov edi, ebx
+    mov esi, ecx
     mov eax, SYS_READ ; call system file reader
     int 0x80   ; call kernel
 
 __km_asm_internal_fclose:
-    mov rdi, ebx
+    mov edi, ebx
     mov eax, SYS_CLOSE ; call system file closer
     int 0x80   ; call kernel
