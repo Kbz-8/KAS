@@ -19,6 +19,22 @@
 
 #include <kmlib.h>
 
+// Flags for mmap
+#define MAP_PRIVATE 0x0001
+#define MAP_SHARED 0x0002
+#define MAP_ANONYMOUS 0x0004
+#define MAP_FIXED 0x0008
+
+#define MAP_FAILED ((void*)-1)
+
+// Protections on memory mapping
+#define PROT_READ 0x1
+#define PROT_WRITE 0x2
+#define PROT_NONE 0x8
+
+void* __km_asm_internal_mmap(void*, size_t, int, int);
+int __km_asm_internal_munmap(void*, size_t);
+
 typedef struct block
 {
 	size_t size;
@@ -76,7 +92,7 @@ void* km_malloc(size_t size)
 	void* ptr = NULL;
 	block* block_ptr = head;
 
-	block_ptr = mmap(NULL, size + sizeof(block), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+	block_ptr = __km_asm_internal_mmap(0, size + sizeof(block), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANONYMOUS | MAP_PRIVATE);
 
 	if(block_ptr == MAP_FAILED)
 	{
@@ -99,7 +115,7 @@ void* km_malloc_shared(size_t size)
 	void* ptr = NULL;
 	block* block_ptr = head;
 
-	block_ptr = mmap(NULL, size + sizeof(block), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANONYMOUS | MAP_SHARED, 0, 0);
+	block_ptr = __km_asm_internal_mmap(0, size + sizeof(block), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANONYMOUS | MAP_SHARED);
 
 	if(block_ptr == MAP_FAILED)
 	{
@@ -131,7 +147,7 @@ int km_free(void* ptr)
 			alloc_size = finder->size;
 
 			remove_block(finder);
-			if(munmap(finder, alloc_size) != 0) // free
+			if(__km_asm_internal_munmap(finder, alloc_size) != 0) // free
 			{
 				km_print("\033[0;31mkmib error: unable to unmap pointer\033[0m\n");
 				ptr = NULL;
