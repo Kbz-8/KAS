@@ -17,10 +17,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <unistd.h>
-
 #include <kmlib.h>
 
 typedef struct block
@@ -35,7 +31,6 @@ static block* tail = NULL;
 static long long gc_leaks_bytes = 0;
 static bool is_gc_init = false;
 static bool is_cleanup_activated = false;
-static size_t __page_size = 0;//sysconf(_SC_PAGESIZE);
 
 void add_block(block* newBlock)
 {

@@ -37,7 +37,7 @@ static __exit_func_list __main_exit_func_list = { 0, {} };
         if(!cond)
         {
             km_printf("assertion failed : %s, %s", file, line);
-            km_exit();
+            km_exit(-1);
         }
     }
 #endif

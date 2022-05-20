@@ -17,29 +17,26 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <unistd.h>
-
 #include <kmlib.h>
 
 km_file __km_asm_internal_fopen(const char*, int);
 void __km_asm_internal_fwrite(km_file, const char*, int);
 void __km_asm_internal_fread(km_file, char*);
 void __km_asm_internal_fclose(km_file);
+void __km_asm_internal_cout(const char*, int);
 
 size_t km_print(const char* out)
 {
     size_t len = km_strlen(out);
-	write(STDOUT_FILENO, out, len);
+	__km_asm_internal_cout(out, len);
     return len;
 }
 
 size_t km_println(const char* out)
 {
     size_t len = km_strlen(out);
-	write(STDOUT_FILENO, out, len);
-	write(STDOUT_FILENO, "\n", 1);
+	__km_asm_internal_cout(out, len);
+	__km_asm_internal_cout("\n", 1);
     return len + 1;
 }
 
@@ -54,7 +51,7 @@ size_t km_printf(const char* out, ...)
 
     size_t len = km_strlen(buffer);
 
-	write(STDOUT_FILENO, buffer, len);
+	__km_asm_internal_cout(buffer, len);
 
     return len;
 }
@@ -62,7 +59,7 @@ size_t km_printf(const char* out, ...)
 
 km_file km_fopen(const char* path, int mode)
 {
-	__km_asm_internal_fopen(path, mode);
+	return __km_asm_internal_fopen(path, mode);
 }
 
 void km_fwrite(km_file file, const char* message, int len)
