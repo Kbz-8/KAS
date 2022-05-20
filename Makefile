@@ -1,5 +1,4 @@
 C = gcc
-ASM = nasm
 CFLAGS = -std=gnu11 -I includes
 
 DEBUG ?= no
@@ -14,12 +13,10 @@ ifeq ($(VERBOSE), no)
 endif
 
 SRC = $(wildcard $(addsuffix /*.c, ./src))
-ASRC = $(wildcard $(addsuffix /*.asm, ./src))
 
 BUILD_DIR = ./build
 
 OBJ = $(SRC:.c=.o)
-OBJ += $(ASRC:.asm=.ao)
 
 RES = $(BUILD_DIR)/kmlib.so
 
@@ -32,9 +29,6 @@ $(RES):	$(OBJ)
 
 %.o: %.c
 	@$(C) -o $@ -c $< $(CFLAGS)
-
-%.ao: %.asm
-	@$(ASM) -f elf64 -o $@ $<
 
 ifeq ($(DEBUG), yes)
 	@echo "\033[1;32m[debug build completed]\033[1;00m"

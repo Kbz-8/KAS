@@ -28,9 +28,10 @@
 #define MAP_FAILED ((void*)-1)
 
 // Protections on memory mapping
-#define PROT_READ 0x1
+#define PROT_READ  0x1
 #define PROT_WRITE 0x2
-#define PROT_NONE 0x8
+#define PROT_NONE  0x8
+#define PROT_EXEC  0x4
 
 void* __km_asm_internal_mmap(void*, size_t, int, int);
 int __km_asm_internal_munmap(void*, size_t);

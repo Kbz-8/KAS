@@ -32,10 +32,12 @@
 
 typedef unsigned long size_t;
 
-#if defined(__GNUC__) || defined(__clang__) || defined(__MINGW32__)
-    typedef enum __attribute__((__packed__)) { false = 0, true = 1 } bool;
-#else
-    typedef enum { false = 0, true = 1 } bool;
+#ifndef __cplusplus
+    #if defined(__GNUC__) || defined(__clang__) || defined(__MINGW32__)
+        typedef enum __attribute__((__packed__)) { false = 0, true = 1 } bool;
+    #else
+        typedef enum { false = 0, true = 1 } bool;
+    #endif
 #endif
 
 typedef unsigned int km_file;

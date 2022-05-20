@@ -24,7 +24,7 @@ global __km_asm_internal_fread
 global __km_asm_internal_fclose
 global __km_asm_internal_cout
 global __km_asm_internal_mmap
-global __km_asm_interanl_munmap
+global __km_asm_internal_munmap
 
 %define SYS_EXIT  1
 %define SYS_OPEN  5
@@ -35,39 +35,40 @@ global __km_asm_interanl_munmap
 %define SYS_MUNMAP 0x0B
 
 __km_asm_internal_exit:
-    mov edi, ebx ; passing code to sys call
+    mov ebx, edi
     mov eax, SYS_EXIT ; system call number (sys_exit)
     int 0x80   ; call kernel
 
 __km_asm_internal_fopen:
-    mov edi, ebx
+    mov ebx, edi
     mov esi, ecx
+    mov edx, 0
     mov eax, SYS_OPEN ; call system file opener
     int 0x80   ; call kernel
     ret
 
 __km_asm_internal_fwrite:
-    mov edi, ebx
+    mov ebx, edi
     mov esi, ecx
     mov eax, SYS_WRITE ; call system file writer
     int 0x80   ; call kernel
 
 __km_asm_internal_fread:
-    mov edi, ebx
-    mov esi, ecx
+    mov ebx, edi
+    mov ecx, esi
     mov eax, SYS_READ ; call system file reader
     int 0x80   ; call kernel
     ret
 
 __km_asm_internal_fclose:
-    mov edi, ebx
+    mov ebx, edi
     mov eax, SYS_CLOSE ; call system file closer
     int 0x80   ; call kernel
 
 __km_asm_internal_cout:
     mov rax, 4        ; sys_write 
     mov rbx, 1        ; File descriptor 1, stdout
-    mov rcx, rci      ; Pass the message
+    mov rcx, rdi      ; Pass the message
     mov rdx, rsi      ; Length of message
     int 0x80
 
@@ -77,8 +78,8 @@ __km_asm_internal_mmap:
     ret
 
 __km_asm_internal_munmap:
-    mov rdi, rbx ; give pointer to mapped region
-    mov rsi, rcx ; give length of mapped region
+    mov rbx, rdi ; give pointer to mapped region
+    mov rcx, rsi ; give length of mapped region
     mov rax, SYS_MUNMAP ; call munmap
     int 0x80 ; call kernel
     ret
