@@ -17,38 +17,21 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __KM_ALLTYPES__
-#define __KM_ALLTYPES__
+#include "mmap.h"
 
-#ifndef NULL
-#	define NULL ((char*)0)
-#endif
+#define OFF_MASK ((-0x2000ULL << (8 * sizeof(syscall_arg_t) - 1)) | (UNIT - 1))
 
-#ifndef CHAR_BIT
-#	define CHAR_BIT 8
-#endif
+void* km_mmap(void* start, size_t len, int prot, int flags, int fd, off_t off)
+{
+	long ret = 0;
+	if(off & OFF_MASK)
+		return MAP_FAILED;
+	if(len >= PTRDIFF_MAX)
+		return MAP_FAILED;
 
-#define KM_MAX_PRECISION 10
-
-typedef unsigned long size_t;
-typedef long int off_t;
-
-#ifndef __cplusplus
-    #if defined(__GNUC__) || defined(__clang__) || defined(__MINGW32__)
-        typedef enum __attribute__((__packed__)) { false = 0, true = 1 } bool;
-    #else
-        typedef enum { false = 0, true = 1 } bool;
-    #endif
-#endif
-
-typedef unsigned int km_file;
-
-#define KM_F_RONLY  00
-#define KM_F_WONLY  01
-#define KM_F_APPEND 02000
-#define KM_F_CREATE 0100
-#define KM_F_RW     02
-#define KM_F_SYNC   04010000
-#define KM_F_ASYNC  020000
-
-#endif // __KM_ALL_TYPES__
+	ret = __syscall6(SYS_mmap, start, len, prot, flags, fd, off);
+	
+	if(ret == -EPERM && !start && (flags & MAP_ANON) && !(flags & MAP_FIXED))
+		ret = -ENOMEM;
+	return (void *)__syscall_ret(ret);
+}

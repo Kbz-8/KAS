@@ -17,38 +17,26 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __KM_ALLTYPES__
-#define __KM_ALLTYPES__
+#ifndef __KM_SYS_MMAP__
+#define __KM_SYS_MMAP__
 
-#ifndef NULL
-#	define NULL ((char*)0)
-#endif
+#include <km_alltypes.h>
 
-#ifndef CHAR_BIT
-#	define CHAR_BIT 8
-#endif
+// Flags for mmap
+#define MAP_PRIVATE 0x0001
+#define MAP_SHARED 0x0002
+#define MAP_ANONYMOUS 0x0004
+#define MAP_FIXED 0x0008
 
-#define KM_MAX_PRECISION 10
+#define MAP_FAILED ((void*)-1)
 
-typedef unsigned long size_t;
-typedef long int off_t;
+// Protections on memory mapping
+#define PROT_READ  0x1
+#define PROT_WRITE 0x2
+#define PROT_NONE  0x8
+#define PROT_EXEC  0x4
 
-#ifndef __cplusplus
-    #if defined(__GNUC__) || defined(__clang__) || defined(__MINGW32__)
-        typedef enum __attribute__((__packed__)) { false = 0, true = 1 } bool;
-    #else
-        typedef enum { false = 0, true = 1 } bool;
-    #endif
-#endif
+void* km_mmap(void* start, size_t len, int prot, int flags, int fd, off_t off);
+int km_unmap(void* addr, size_t length);
 
-typedef unsigned int km_file;
-
-#define KM_F_RONLY  00
-#define KM_F_WONLY  01
-#define KM_F_APPEND 02000
-#define KM_F_CREATE 0100
-#define KM_F_RW     02
-#define KM_F_SYNC   04010000
-#define KM_F_ASYNC  020000
-
-#endif // __KM_ALL_TYPES__
+#endif // __KM_SYS_MMAP__
