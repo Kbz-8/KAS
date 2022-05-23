@@ -17,27 +17,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __KMLIB__
-#define __KMLIB__
+static int __km_errno; // TODO: use atomic
 
-#include "km_io.h"
-#include "km_errno.h"
-#include "km_memory.h"
-#include "km_strings.h"
-#include "km_va_args.h"
-#include "km_alltypes.h"
-
-#define abort() km_abort()
-#define exit(status) km_exit(status)
-#define atexit(func) km_atexit(func)
-
-void km_exit(int status);
-void km_abort();
-int km_atexit(void (*func)(void));
-
-void km_assert(int cond, const char* file, const char* line);
-
-#undef km_assert
-#define km_assert(cond) km_assert(cond, __FILE__, __LINE__)
-
-#endif // __KMLIB__
+int* __get_errno()
+{
+    return &__km_errno;
+}

@@ -17,27 +17,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __KMLIB__
-#define __KMLIB__
+#ifndef __KM_SYS_RET__
+#define __KM_SYS_RET__
 
-#include "km_io.h"
-#include "km_errno.h"
-#include "km_memory.h"
-#include "km_strings.h"
-#include "km_va_args.h"
-#include "km_alltypes.h"
+#include <km_errno.h>
 
-#define abort() km_abort()
-#define exit(status) km_exit(status)
-#define atexit(func) km_atexit(func)
+long syscall_ret(unsigned long r)
+{
+    if(r > -4096UL)
+    {
+        km_errno = -r;
+        return -1;
+    }
+    return r;
+}
 
-void km_exit(int status);
-void km_abort();
-int km_atexit(void (*func)(void));
-
-void km_assert(int cond, const char* file, const char* line);
-
-#undef km_assert
-#define km_assert(cond) km_assert(cond, __FILE__, __LINE__)
-
-#endif // __KMLIB__
+#endif // __KM_SYS_RET__ 

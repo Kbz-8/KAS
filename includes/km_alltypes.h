@@ -32,13 +32,10 @@
 
 typedef unsigned long size_t;
 typedef long int off_t;
+typedef long syscall_arg_t;
 
 #ifndef __cplusplus
-    #if defined(__GNUC__) || defined(__clang__) || defined(__MINGW32__)
-        typedef enum __attribute__((__packed__)) { false = 0, true = 1 } bool;
-    #else
-        typedef enum { false = 0, true = 1 } bool;
-    #endif
+    typedef enum __attribute__((__packed__)) { false = 0, true = 1 } bool;
 #endif
 
 typedef unsigned int km_file;
@@ -50,5 +47,8 @@ typedef unsigned int km_file;
 #define KM_F_RW     02
 #define KM_F_SYNC   04010000
 #define KM_F_ASYNC  020000
+
+#define weak_alias(name, aliasname) _weak_alias (name, aliasname)
+#define _weak_alias(name, aliasname) extern __typeof (name) aliasname __attribute__ ((weak, alias (#name)));
 
 #endif // __KM_ALL_TYPES__

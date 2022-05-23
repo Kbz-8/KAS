@@ -17,27 +17,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __KMLIB__
-#define __KMLIB__
+#define E(n, s) case n : return s;
 
-#include "km_io.h"
-#include "km_errno.h"
-#include "km_memory.h"
-#include "km_strings.h"
-#include "km_va_args.h"
-#include "km_alltypes.h"
+#include <km_errno.h>
 
-#define abort() km_abort()
-#define exit(status) km_exit(status)
-#define atexit(func) km_atexit(func)
+char* km_strerror(int e)
+{
+    switch(e)
+    {
+        #include "str_errno_code.h"
 
-void km_exit(int status);
-void km_abort();
-int km_atexit(void (*func)(void));
+        default: break;
+    }
+    return "Unknown error code";
+}
 
-void km_assert(int cond, const char* file, const char* line);
-
-#undef km_assert
-#define km_assert(cond) km_assert(cond, __FILE__, __LINE__)
-
-#endif // __KMLIB__
+#undef E(n, s)

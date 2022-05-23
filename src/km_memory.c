@@ -18,9 +18,7 @@
  */
 
 #include <kmlib.h>
-
-void* __km_asm_internal_mmap(void*, size_t, int, int);
-int __km_asm_internal_munmap(void*, size_t);
+#include "sys/mmap.h"
 
 typedef struct block
 {
@@ -77,13 +75,13 @@ void remove_block(block* delBlock)
 void* km_malloc(size_t size)
 {
 	void* ptr = NULL;
-	block* block_ptr = head;
+	block* block_ptr = NULL;
 
-	block_ptr = __km_asm_internal_mmap(0, size + sizeof(block), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANONYMOUS | MAP_PRIVATE);
+	block_ptr = (block*)km_mmap(NULL, size + sizeof(block), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
 
 	if(block_ptr == MAP_FAILED)
 	{
-		km_printf("\033[0;31mkmib error: unable to alloc %d bytes\033[0m\n", size);
+		km_println("\033[0;31mkmib error: unable to alloc memory\033[0m");
 		return NULL;
 	}
 
@@ -100,13 +98,13 @@ void* km_malloc(size_t size)
 void* km_malloc_shared(size_t size)
 {
 	void* ptr = NULL;
-	block* block_ptr = head;
+	block* block_ptr = NULL;
 
-	block_ptr = __km_asm_internal_mmap(0, size + sizeof(block), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANONYMOUS | MAP_SHARED);
+	block_ptr = (block*)km_mmap(NULL, size + sizeof(block), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANONYMOUS | MAP_SHARED, 0, 0);
 
 	if(block_ptr == MAP_FAILED)
 	{
-		km_printf("\033[0;31mkmib error: unable to alloc map of size : %d\033[0m\n", size);
+		km_println("\033[0;31mkmib error: unable to alloc shared memory\033[0m");
 		return NULL;
 	}
 
@@ -123,6 +121,8 @@ void* km_malloc_shared(size_t size)
 
 int km_free(void* ptr)
 {
+	if(ptr == NULL)
+		return 0;
 	block* finder = head;
 	size_t block_size = sizeof(block); // avoiding redoing sizeof(block) operation at each turn of the loop
 	size_t alloc_size = 0;
@@ -134,7 +134,7 @@ int km_free(void* ptr)
 			alloc_size = finder->size;
 
 			remove_block(finder);
-			if(__km_asm_internal_munmap(finder, alloc_size) != 0) // free
+			if(km_unmap(finder, alloc_size) != 0) // free
 			{
 				km_print("\033[0;31mkmib error: unable to unmap pointer\033[0m\n");
 				ptr = NULL;
@@ -174,7 +174,7 @@ void* km_realloc(void* ptr, size_t size)
 
 			if(!newPtr)
 			{
-				km_printf("\033[0;31mkmib error: unable to realloc %d bytes\033[0m\n", size);
+				km_println("\033[0;31mkmib error: unable to realloc memory\033[0m");
 				return NULL;
 			}
 			return newPtr;
@@ -188,7 +188,7 @@ void* km_calloc(size_t n, size_t size)
 	void* ptr = km_malloc(n * size);
 	if(!ptr)
 	{
-		km_printf("\033[0;31mkmib error: unable to calloc %d bytes\033[0m\n", size);
+		km_println("\033[0;31mkmib error: unable to calloc memory\033[0m");
 		return NULL;
 	}
 	km_memset(ptr, 0, n * size);

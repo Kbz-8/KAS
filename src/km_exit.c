@@ -18,6 +18,7 @@
  */
 
 #include <km_alltypes.h>
+#include <sys_call.h>
 
 typedef void (*exit_fn)(void);
 
@@ -58,7 +59,7 @@ void km_exit(int status)
             __main_exit_func_list.num_of_func--;
         }
     }
-    __km_asm_internal_exit(status);
+    __syscall1(__sys_exit, status);
 }
 
 int km_atexit(void (*func)(void))

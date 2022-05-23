@@ -17,9 +17,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "mmap.h"
+#include <km_alltypes.h>
+#include <sys_call.h>
+#include <km_io.h>
+#include <alltypes_arch.h>
 
-#define OFF_MASK ((-0x2000ULL << (8 * sizeof(syscall_arg_t) - 1)) | (UNIT - 1))
+#include "mmap.h"
+#include "sys_ret.h"
+
+#define OFF_MASK ((-0x2000ULL << (8 * sizeof(syscall_arg_t) - 1)) | (4096ULL - 1))
 
 void* km_mmap(void* start, size_t len, int prot, int flags, int fd, off_t off)
 {
@@ -29,9 +35,18 @@ void* km_mmap(void* start, size_t len, int prot, int flags, int fd, off_t off)
 	if(len >= PTRDIFF_MAX)
 		return MAP_FAILED;
 
-	ret = __syscall6(SYS_mmap, start, len, prot, flags, fd, off);
-	
-	if(ret == -EPERM && !start && (flags & MAP_ANON) && !(flags & MAP_FIXED))
-		ret = -ENOMEM;
-	return (void *)__syscall_ret(ret);
+	ret = __syscall6(__sys_mmap, start, len, prot, flags, fd, off);
+
+	if(ret == -KM_EPERM && !start && (flags & MAP_ANON) && !(flags & MAP_FIXED))
+		ret = -KM_ENOMEM;
+	return (void*)syscall_ret(ret);
+}
+
+static void dummy(void) {}
+weak_alias(dummy, __vm_wait);
+
+int km_unmap(void* start, size_t len)
+{
+    __vm_wait();
+    return __syscall2(__sys_munmap, start, len);
 }
