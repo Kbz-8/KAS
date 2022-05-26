@@ -17,7 +17,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-static int __km_errno; // TODO: use atomic
+#ifdef __STDC_NO_ATOMICS__
+static int __km_errno;
+#else
+_Atomic static int __km_errno;
+#endif
 
 int* __get_errno()
 {
