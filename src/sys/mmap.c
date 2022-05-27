@@ -25,28 +25,50 @@
 #include "mmap.h"
 #include "sys_ret.h"
 
-#define OFF_MASK ((-0x2000ULL << (8 * sizeof(syscall_arg_t) - 1)) | (4096ULL - 1))
+#define OFF_MASK ((-0x2000ULL << (8 * sizeof(long) - 1)) | 0xfff)
+
+static void dummy1(int x) {}
+static void dummy0(void) {}
+weak_alias(dummy1, __vm_lock);
+weak_alias(dummy0, __vm_unlock);
 
 void* km_mmap(void* start, size_t len, int prot, int flags, int fd, off_t off)
-{
-	long ret = 0;
+{ 
+	long value = 0;
 	if(off & OFF_MASK)
-		return MAP_FAILED;
-	if(len >= PTRDIFF_MAX)
-		return MAP_FAILED;
+    {
+        km_errno = KM_EINVAL;
+        return MAP_FAILED;
+    }
+    if(len >= PTRDIFF_MAX) 
+    {
+        km_errno = KM_ENOMEM;
+        return MAP_FAILED;
+    }
+    if(flags & MAP_FIXED)
+        __vm_lock(-1);
 
-	ret = __syscall6(__sys_mmap, start, len, prot, flags, fd, off);
+#ifdef __sys_mmap2
+    value = __syscall6(__sys_mmap2, start, len, prot, flags, fd, off >> 12);
+#else
+	value = __syscall6(__sys_mmap, start, len, prot, flags, fd, off);
+#endif
 
-	if(ret == -KM_EPERM && !start && (flags & MAP_ANON) && !(flags & MAP_FIXED))
-		ret = -KM_ENOMEM;
-	return (void*)syscall_ret(ret);
+	if(value == -KM_EPERM && !start && (flags & MAP_ANON) && !(flags & MAP_FIXED))
+		value = -KM_ENOMEM;
+
+    void* ret = (void*)syscall_ret(value);
+
+    if(flags & MAP_FIXED)
+        __vm_unlock();
+
+	return ret;
 }
-
-static void dummy(void) {}
-weak_alias(dummy, __vm_wait);
 
 int km_unmap(void* start, size_t len)
 {
-    __vm_wait();
-    return __syscall2(__sys_munmap, start, len);
+    __vm_lock(-1);
+    int ret = __syscall2(__sys_munmap, start, len);
+    __vm_unlock();
+    return ret;
 }

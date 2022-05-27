@@ -20,8 +20,8 @@
 #ifndef __KM_ERRNO_INCLUDE__
 #define __KM_ERRNO_INCLUDE__
 
-int* __get_errno();
-#define km_errno (*__get_errno())
+int* __km_get_errno();
+#define km_errno (*__km_get_errno())
 
 char* km_strerror(int e);
 

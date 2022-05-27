@@ -21,18 +21,25 @@
 #define __KM_ALLTYPES__
 
 #ifndef NULL
-#	define NULL ((char*)0)
+    #if __cplusplus >= 201103L
+        #define NULL nullptr
+    #elif defined(__cplusplus)
+        #define NULL 0L
+    #elif __STDC_VERSION__ >= 199901L
+        #define NULL 0
+    #else
+        #define NULL ((void*)0)
+    #endif
 #endif
 
 #ifndef CHAR_BIT
-#	define CHAR_BIT 8
+    #define CHAR_BIT 8
 #endif
 
 #define KM_MAX_PRECISION 10
 
 typedef unsigned long size_t;
 typedef long int off_t;
-typedef long syscall_arg_t;
 
 #ifndef __cplusplus
     typedef enum __attribute__((__packed__)) { false = 0, true = 1 } bool;

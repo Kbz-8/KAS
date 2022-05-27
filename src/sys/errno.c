@@ -18,12 +18,12 @@
  */
 
 #ifdef __STDC_NO_ATOMICS__
-static int __km_errno;
+static int __km_errno = 0;
 #else
-_Atomic static int __km_errno;
+_Atomic static int __km_errno = 0;
 #endif
 
-int* __get_errno()
+int* __km_get_errno()
 {
-    return &__km_errno;
+	return &__km_errno;
 }

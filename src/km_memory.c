@@ -18,6 +18,7 @@
  */
 
 #include <kmlib.h>
+#include <alltypes_arch.h>
 #include "sys/mmap.h"
 
 typedef struct block
@@ -72,12 +73,14 @@ void remove_block(block* delBlock)
 	delBlock = NULL;
 }
 
+#include <stdio.h>
+
 void* km_malloc(size_t size)
 {
 	void* ptr = NULL;
 	block* block_ptr = NULL;
 
-	block_ptr = (block*)km_mmap(NULL, size + sizeof(block), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+	block_ptr = (block*)km_mmap(0, (size + sizeof(block)) & PAGE_MASK, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
 
 	if(block_ptr == MAP_FAILED)
 	{
@@ -100,7 +103,7 @@ void* km_malloc_shared(size_t size)
 	void* ptr = NULL;
 	block* block_ptr = NULL;
 
-	block_ptr = (block*)km_mmap(NULL, size + sizeof(block), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANONYMOUS | MAP_SHARED, 0, 0);
+	block_ptr = (block*)km_mmap(0, (size + sizeof(block)) & PAGE_MASK, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANONYMOUS | MAP_SHARED, 0, 0);
 
 	if(block_ptr == MAP_FAILED)
 	{

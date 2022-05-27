@@ -17,7 +17,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#undef  PAGESIZE
-#define PAGESIZE 4096
+#undef  PAGE_SIZE
+#define PAGE_SIZE 4096
+
+#undef PAGE_MASK
+#define PAGE_MASK (PAGE_SIZE - 1)
 
 #define PTRDIFF_MAX 0x7FFFFFFFFFFFFFFF
+
+#define MAP_32BIT 0x40
