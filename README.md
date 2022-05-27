@@ -33,12 +33,25 @@ In `km_io.h`:
 * `void km_print(const char* out);`
 * `void km_println(const char* out);`
 * `void km_printf(const char* out, ...);`
+* `km_file km_fopen(const char* path, int mode);`
+* `void km_fwrite(km_file file, const char* message, int len);`
+* `void km_fread(km_file file, char* buffer);`
+* `void km_fclose(km_file file);`
 
 In `kmlib.h`:
 * `void km_exit(int status);`
 * `int km_atexit(void (*func)(void));`
 * `void km_assert(int cond);`
 * `void km_abort()`
+
+In `km_va_args.h`:
+* `km_va_start(ap, param)`
+* `km_va_arg(ap, type)`
+* `km_va_end(ap)`
+
+In `km_errno.h`:
+* `km_errno`
+* `char* km_strerror(int e);`
 
 ## Garbage Collector
 
@@ -70,4 +83,3 @@ This is the list of macros that can be defined to modify the behaviour oh kmlib 
 
 ### Contact
 kbz_8.dev@akel-engine.com
-
